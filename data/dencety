@@ -1,0 +1,36 @@
+ 226: SUBSYSTEM=acpi
+ 200: SUBSYSTEM=tty
+ 192: MAJOR=4
+ 103: ID_MM_CANDIDATE=1
+  88: SUBSYSTEM=module
+  69: dpkg: warning: ignoring pre-dependency problem!
+  67: SUBSYSTEM=input
+  66: SUBSYSTEM=block
+  58: DEVTYPE=disk
+  58: SUBSYSTEM=bdi
+  50: MINOR=0
+  50: MAJOR=1
+  44: SUBSYSTEM=usb
+  44: MAJOR=7
+  42: SUBSYSTEM=drm
+  40: SUBSYSTEM=pci
+  38: SUBSYSTEM=i2c
+  35: MAJOR=13
+  34: PCI_SUBSYS_ID=1028:0490
+  32: ID_INPUT=1
+  32: SUBSYSTEM=scsi
+  32: MAJOR=10
+  32: SUBSYSTEM=misc
+  30: PROP=0
+  30: ACTION=change
+  28: MINOR=1
+  28: SUBSYSTEM=vc
+  28: SUBSYSTEM=drivers
+  26: SUBSYSTEM=platform
+  26: SUBSYSTEM=pnp
+  26: SUBSYSTEM=wmi
+  26: SUBSYSTEM=sound
+  
+  
+  
+  log key dencity
