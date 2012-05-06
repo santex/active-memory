@@ -1,0 +1,19 @@
+
+  use Bio::PhyloNetwork;
+  use Bio::PhyloNetwork::GraphViz;
+
+  my $net=Bio::PhyloNetwork->new(
+      -eNewick=>'((H1,(H1,(H2,l))),H2)t0; (some long label)H1; ("quoted label")H2;'
+  );
+
+  my $gv=Bio::PhyloNetwork::GraphViz->new(-net=>$net,-short_labels=>1);
+
+  foreach my $u ($net->nodes()) {
+      print "$u:".$gv->nodePN_to_nodeGV->{$u}."\n";
+  }
+
+  print $gv->as_text;
+
+  open PS, "> net.ps";
+  print PS $gv->as_ps;
+  close PS;

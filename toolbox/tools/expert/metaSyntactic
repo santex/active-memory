@@ -1,0 +1,12 @@
+use strict;
+use warnings;
+use Acme::MetaSyntactic;
+use Data::Dumper;
+my @env = ();    
+
+# this sets the default theme and loads Acme::MetaSyntactic
+my $meta = Acme::MetaSyntactic->new;
+my $i = 0;
+my @foo = $meta->name( 'alphabet'=>5 );
+print Dumper [@foo];
+foreach($meta->themes()) { print $_,".", $i;};

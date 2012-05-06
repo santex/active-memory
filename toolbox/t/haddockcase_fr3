@@ -1,0 +1,4 @@
+use Acme::MetaSyntactic::haddock;
+my $h = Acme::MetaSyntactic::haddock->new;
+print $h->name;
+
