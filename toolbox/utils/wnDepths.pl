@@ -72,7 +72,7 @@ elsif (defined $ENV{WNHOME})
 else
 {
     $wnPCPath = "C:\\Program Files\\WordNet\\2.1\\dict";
-    $wnUnixPath = "/usr/share/wordnet/dict";
+    $wnUnixPath = "/usr/local/wordnet/dict";
 }
 
 # I think the actual OS name for most versions of Windows is 'MSWin32',

@@ -1,4 +1,4 @@
-# $Id: RandomDistFunctions.pm 16123 2009-09-17 12:57:27Z cjfields $
+ $Id: RandomDistFunctions.pm 16123 2009-09-17 12:57:27Z cjfields $
 #
 # BioPerl module for Bio::Tools::RandomDistFunctions
 #

@@ -17,7 +17,7 @@ use strict;
 our($hldstring,$str,$numyrows,$numdigs,$numxrows,$col,$row,$boxnums,$orboxnum,$c,$wholecommand,@commandarray,$istart,@strs,$name,@grid,%numbers,%letters,$xcorn,$ycorn);
 
 $numyrows = 8;     # number of rows in the acrostic
-$numxrows = 2;    # number of columns in the acrostic 
+$numxrows = 5;    # number of columns in the acrostic 
 
 our $xdim = 7*$numxrows;  # number of elements across the array
 our $ydim = 7*$numyrows; # number of elements down the array
