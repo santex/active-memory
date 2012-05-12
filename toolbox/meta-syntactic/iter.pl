@@ -20,6 +20,9 @@ use Algorithm::SocialNetwork;
 # 
 #print  $G;
 #print  $G;
+
+  my $meta = Acme::MetaSyntactic->new();
+  my @themes = $meta->themes();
  foreach(@themes){ 
  print Dumper [$@,
                $G,$BC]; #print Dumper $_;
