@@ -55,7 +55,7 @@ active-memory
 
   ☞ [Data & Time to get it](https://github.com/santex/active-memory/raw/master/doc/image/query-surface.jpg)
     proof of concept is implemented great stuff,
-    based on what I more or less discovered by incident i have started this project.
+    based on what I more or less discovered by exident, i have started this project.
 
 #### Some additional Knowledge Networks which add passive context
 
@@ -74,7 +74,7 @@ active-memory
 
 
 
---
+```
 #!/usr/local/bin/perl -lw
 {sub b{ return pack("B64",shift
 );}; @n=qw(01110011 01100001 01101110
@@ -93,4 +93,4 @@ OOOOMMMMMMM(                 )MMMMMMMMMMMMMMM
 OOOOOMMMMMMMMM\\___________//MMMMMMMMMMMMMMMM
 OOOOMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 ',[@fin]};
-
+```
