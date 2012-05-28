@@ -22,8 +22,7 @@ active-memory
   ☞ [short term goal] 
     
   To implement the properties of the concept into a generic db environment.
-  to reduce the distance to information and the energy required to get there.
-  
+  to reduce the distance to information and increasing vissibility of data.
   Accessing the full potential of data networks in a passive way 
   
 
