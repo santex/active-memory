@@ -69,7 +69,7 @@ active-memory
   Not finished, any help is welcome
 
 #### Implementation
-  → [my client lab!](http://quantup.com)
+  → [my frontend lab!](http://quantup.com)
 
 
 
