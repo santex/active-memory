@@ -73,7 +73,7 @@ active-memory
 ## Runing it
 
 
-
+```
 
 use strict;
 use warnings;
@@ -139,7 +139,7 @@ my $x = AI::MicroStructure->new(
 
 
 1;
-
+```
 
 #### Implementation
   → [my frontend lab!](http://quantup.com)
