@@ -1,0 +1,316 @@
+#!/bin/bash
+
+progname=$(basename $0)
+
+if [ "$USER" = "" ]
+then
+    USER=$(whoami)
+fi
+
+
+DAYOFWEEK=$(date +"%u")
+if [ "$DAYOFWEEK" -gt 5 ] || [ "$DAYOFWEEK" -eq 1 ]
+then
+    LASTBIZDAY="last friday"
+else
+    LASTBIZDAY="yesterday"
+fi
+
+PATH="/usr/bin:/bin:/usr/sbin:/sbin"
+
+INSTALL_DIR="/usr/lib/activedata"
+
+
+
+
+VERSION='0.01'
+NAME="active-memory"
+DROP=$HOME"/"$NAME
+LOG=$DROP"/"$NAME".log"
+
+TOOLS_WNT="micro-wordnet"
+TOOLS_CLI="micro-structure"
+TOOLS_DIC="micro-dict"
+TOOLS_STM="micro-steemer"
+TOOLS_REN="micro-rename"
+TOOLS_WST="micro-wnwikilist"
+
+
+[ ! -d $DROP ] && mkdir -p $DROP;
+[ ! -f $LOG ] && echo $progname" "$USER" "$LOG" " > $LOG;
+
+
+NAMES=$(perl -MAI::MicroStructure -E  "print AI::MicroStructure::themes(100);")
+
+themes=$(perl -MAI::MicroStructure -E  "print AI::MicroStructure::themes(100);")
+
+
+
+# --------------------------- shell functions below --------------------------
+function usage_and_exit
+{
+    cat<<EOF
+Created (and fill) database tables for FinanceQuant
+Usage: $progname [-m] [-n databasename] [-h]
+Options:
+    -m      Use MySQL instead of PostgreSQL
+    -n SOMENAME Create database as SOMENAME instead of FinanceQuant
+    -l dbfile   Use SQLite3 (current version) as backend with file 'dbfile'
+    -o dbfile   Use SQLite (old v2) as backend with file 'dbfile'
+    -s      Schema only -- Do not fill the database
+    -h      Show this help
+EOF
+    exit 0
+}
+
+function execute
+{
+    echo -n "** Running:     "
+    echo "$1"
+    eval "$1"
+    echo
+}
+
+
+
+_temp="/tmp/answer.$$"
+PN=`basename "$0"`
+VER='0.01'
+dialog 2>$_temp
+DVER=`cat $_temp | head -1`
+
+### gauge demo ###
+gauge() {
+    { for I in $(seq 1 100) ; do
+        echo $I
+        sleep 0.01
+      done
+    echo 100; } | dialog --backtitle "Dialog - Progress sample" \
+                         --gauge "Progress" 6 60 0
+
+
+
+}
+
+### File or Directory selection menu with dialog
+file_menu() {
+    fileroot=$DROP
+    IFS_BAK=$IFS
+    IFS=$'\n' # wegen Filenamen mit Blanks
+    array=( $(ls $fileroot) )
+    n=0
+    for item in ${array[@]}
+    do
+        menuitems="$menuitems $n ${item// /_}" # subst. Blanks with "_"
+        let n+=1
+    done
+    IFS=$IFS_BAK
+    dialog --backtitle "Dialog - Sample menu with variable items" \
+           --title "Select a file" --menu \
+           "Choose one of the menu points" 16 40 8 $menuitems 2> $_temp
+    if [ $? -eq 0 ]; then
+        item=`cat $_temp`
+        selection=${array[$(cat $_temp)]}
+        dialog --msgbox "You choose:\nNo. $item --> $selection" 6 42
+    fi
+}
+### File or Directory selection menu with dialog
+word_menu() {
+
+ dialog --backtitle "Dialog - InputBox sample"\
+           --inputbox "Enter a line, please" 18 152 2>$_temp
+    words=`x=$(cat $_temp); cat /home/hagen/myperl/test/wordlist.out | grep $x`
+
+
+    fileroot=$DROP
+    IFS_BAK=$IFS
+    IFS=$'\n' # wegen Filenamen mit Blanks
+    array=( $(ls $fileroot) )
+    n=0
+    for item in ${array[@]}
+    do
+        menuitems="$menuitems $n ${item// /_}" # subst. Blanks with "_"
+        let n+=1
+    done
+    IFS=$IFS_BAK
+    dialog --backtitle "Dialog - Sample menu with variable items" \
+           --title "Select a file" --menu \
+           "Choose one of the menu points" 16 40 8 $menuitems 2> $_temp
+    if [ $? -eq 0 ]; then
+        item=`cat $_temp`
+        selection=${array[$(cat $_temp)]}
+        dialog --msgbox "You choose:\nNo. $selection" 6 42
+
+    fi
+}
+
+### File Select sample
+file_select() {
+    dialog --backtitle "Dialog - fselect sample"\
+           --begin 3 10 --title " use [blank] key to select "\
+           --fselect "$HOME/" 10 60 2>$_temp
+
+    result=`cat $_temp`
+    dialog --msgbox "\nYou selected:\n$result" 9 52
+}
+
+### create Today's calendar ###
+calendar() {
+    today=date +"%d %m %Y"
+    echo "heute=$today"
+    dialog --backtitle "Dialog - Calendar sample" \
+           --calendar "choose a date" 2 1 $today 2>$_temp
+    datum=`cat $_temp`
+    dialog --title " Date selected " --msgbox "\nYour date: $datum" 6 30
+}
+
+
+
+
+
+
+checklist() {
+
+ dialog --backtitle "Dialog - InputBox sample"\
+           --inputbox "Enter a line, please" 18 152 2>$_temp
+    words=`x=$(cat $_temp); cat /home/hagen/myperl/test/wordlist.out | grep $x`
+
+   # number the lines
+SPLITTED=$( echo $words | sed 's/ /\n/g' | awk -- '{print NR, $0, 0 }' )
+
+# prompt via dialog (output-fd=1 is so that dialog gui doesn't go to subshell)
+OUT=$(dialog --output-fd 1 --ok-label Select --separate-output --checklist Choose 0 50 22 $SPLITTED)
+
+
+# loop through selected numbers
+for X in $OUT ; do
+    # inefficiently print out the text corresponding to the selections
+    CHOSEN=$( echo $words | sed 's/ /\n/g' | awk -- "NR==$X {print \$0 }" )
+
+dialog --backtitle "Dialog - MessageBox sample" \
+   --msgbox "$CHOSEN\n$DVER" 9 52
+
+done;
+}
+
+### Radio List - single select sample ###
+radiolist() {
+    dialog --backtitle "Dialog - RadioList (single select) sample" \
+           --radiolist "tag item to choose" 15 50 8 \
+           01 "first item to select" off\
+           02 "second item - on by default" on\
+           03 "third item" off\
+           04 "more items ..." off 2>$_temp
+    result=`cat $_temp`
+    dialog --title " Item(s) selected " --msgbox "\nYou choose item: $result" 6 44
+}
+
+
+
+   #dialog --backtitle "Dialog - InputBox sample"\
+ #          --inputbox "Enter a line, please" 18 152 2>$_temp
+  #  words=`x=$(cat $_temp); cat /home/hagen/myperl/test/wordlist.out | grep $x`
+#    result=`echo -n $words | tr "\t" "\n"`
+
+
+### Input Box sample
+inputbox() {
+    dialog --backtitle "Dialog - InputBox sample"\
+           --inputbox "Enter a line, please" 8 52 2>$_temp
+    words=`x=$(cat $_temp); cat /home/hagen/myperl/test/wordlist.out | grep $x`
+    result=`echo -n $words | tr "\t" "\n"`
+    dialog --msgbox "\nYou entered:\n$result" 19 152
+}
+
+### Message Box sample - show versions
+version() {
+    dialog --backtitle "Dialog - MessageBox sample" \
+           --msgbox "$PN - Version $VER\na Linux dialog Tutorial\n\nusing:\n$DVER" 9 52
+}
+
+### Text Box sample - show file test.txt
+textbox() {
+    filename="test.txt"
+    if [ -e $filename ]; then
+        dialog --backtitle "Dialog - TextBox sample - use [up] [down] to scroll"\
+               --begin 3 5 --title " viewing File: $filename "\
+               --textbox $filename 20 70
+    else
+        dialog --msgbox "*** ERROR ***\n$filename does not exist" 6 42
+    fi
+}
+
+### Form Sample ###
+formbox () {
+    dialog --backtitle "...." \
+        --form " Form Test - use [up] [down] to select input field " 21 70 18 \
+        "name" 2 4 "" 2 15 20 0\
+        "surname" 4 4 "" 4 15 20 0\
+        "city" 6 4 "" 6 15 20 0\
+        "county" 8 4 "Germany" 8 15 "-20" 0\
+        2>$_temp
+
+    if [ ${?} -ne 0 ]; then return; fi
+    result=`cat $_temp`
+    echo "Result=$result"
+    dialog --title "Items are separated by \\n" --cr-wrap \
+           --msgbox "\nYou entered:\n$result" 12 52
+}
+
+### Text Box sample - show file test.txt
+tailbox() {
+
+
+    dialog clear
+    test
+
+    dialog --backtitle "active-data - v 0.01"\
+           --begin 3 5 --title " viewing File: "$LOG" "\
+           --tailbox $LOG 18 70
+}
+
+### create main menu using dialog
+main_menu() {
+
+
+    dialog --backtitle "active-memory - AI microstructure's "$stop --title "- V. $VER "\
+        --cancel-label "Quit" \
+        --menu "Move using [UP] [DOWN], [Enter] to select" 17 60 10\
+        Editor "Change primary configuration!"\
+#        File "Show Dirctory & File selector"\
+        Form "Show a form"\
+        Home_Menu "Show files in \$HOME for selection"\
+        File_Menu "Word-menue in \$HOME for selection"\
+        Input "Show Box for typing a line"\
+        Gauge "Progress bar"\
+        Multi "Multi select list"\
+        Radio "Single select list"\
+        Show "Show file test.txt"\
+        Tail "Watch /var/log/messages"\
+        Version "Show program version info"\
+        Quit "Exit demo program" 2>$_temp
+
+    opt=${?}
+    if [ $opt != 0 ]; then rm $_temp; exit; fi
+    menuitem=`cat $_temp`
+    echo "menu=$menuitem"
+    case $menuitem in
+        Gauge) gauge;;
+     #   File) file_select;;
+        Home_Menu) file_menu;;
+        Word_Menu) word_menu;;
+        Input) inputbox;;
+        Editor) vi test.txt;;
+        Multi) checklist;;
+        Radio) radiolist;;
+        Show) textbox;;
+        Tail) tailbox;;
+        Version) version;;
+        Form) formbox;;
+        Quit) rm $_temp; exit;;
+    esac
+}
+
+while true; do
+  main_menu
+done

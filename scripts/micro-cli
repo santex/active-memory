@@ -1,0 +1,620 @@
+#!/usr/bin/perl -w
+use AI::MicroStructure;
+use strict;
+use Data::Dumper;
+use lib '../lib';
+use Term::ShellUI;
+use File::stat qw(:FIELDS);
+use Cwd;
+use AI::MicroStructure::Plug;
+use AnyDBM_File;
+use Fcntl;
+use JSON;
+use Data::Dumper;
+use vars '%brain';
+my $dbfile = "active-memory.store";
+tie (my %brain, "AnyDBM_File", $dbfile, O_CREAT|O_RDWR, 0600) or die "Can't open $dbfile: $!\n";
+&create_new unless keys %brain;
+
+
+
+print Dumper \%brain;
+
+#&create_new unless keys %brain;
+
+
+sub create_new {
+
+  $brain{json} = File::Spec->catfile("/var/www/meta.json" );
+  $brain{stars} = {};
+  $brain{planets} ={};
+  $brain{galaxy} = {};
+
+}
+
+
+END{
+
+  untie %brain;
+
+
+}
+
+
+our $ms =  AI::MicroStructure->new;
+
+our %name = (action=>[qw/list get set/],#search get set   change plot cloudy
+                        type=>[qw/new my related/],# popular growing fit term
+                        location=>[qw/local remote/]);
+
+#our %name = (action=>[qw/search get set list change plot cloudy/],
+        #               type=>[qw/term new my related popular growing fit/],
+        #               location=>[qw/local remote google wiki file/]);
+
+my @name =();
+my @vals =();
+
+our $descriptions = {action=>{},type=>{},location=>{}};
+
+
+$descriptions->{action} =
+{
+  'get'     =>"get something !",
+  'set'     =>"set something !",
+#  'desc'    =>"show a description about something",
+#  'delete'  =>"remove something",
+  'list'    =>"list something",
+ # 'search'    =>"search something",
+ # 'change'  =>"modify something",
+ # 'plot'    =>"create vissualisation of something",
+ # 'cloudy'  =>"create optimal query surface for something",
+};
+
+$descriptions->{type} =
+{
+
+'new'     =>"things you dont have yet",
+'my'      =>"things you have already",
+'related' =>"things which are related to you",
+#'popular' =>"trending things",#
+#'growing' =>"expanding things",
+#'fit'    =>"usefull things",
+};
+
+$descriptions->{location} =
+{
+  'local'     =>"on your computer",
+  'remote'     =>"on a distant computer",
+};
+
+sub get_cname {
+  return Dumper @_;
+}
+
+
+sub println{
+
+        return sprintf("%s %s \n",shift,localtime);
+}
+
+
+
+sub show {
+        my $prod="";
+        for(@_) { $prod.=$_; }
+        return $prod;
+}
+
+sub set {
+        my $sum=0;
+        for(@_) { $sum+=$_; }
+        return $sum;
+}
+
+sub mult {
+        my $prod=1;
+        for(@_) { $prod*=$_; }
+        return $prod;
+}
+
+sub ashex {
+        my $sub = shift;
+        return sprintf("%x", &$sub(map { hex } @_));
+}
+
+
+sub print_stats
+{
+    for my $file (@_) {
+        stat($file) or die "No $file: $!\n";    # die only stops this command
+        print "$file has $st_nlink link" . ($st_nlink==1?"":"s") .
+            ", and is $st_size byte" . ($st_size==1?"":"s") . " in length.\n";
+        print "Inode Last change at: " . localtime($st_ctime) . "\n";
+        print "      Last access at: " . localtime($st_atime) . "\n";
+        print "    Last modified at: " . localtime($st_mtime) . "\n";
+    }
+}
+
+
+sub danger
+{
+    print "Not performing task -- too dangerous!\n";
+    return 0;
+}
+
+
+sub getSubCommands {
+        return {};
+}
+
+
+
+our $location = {
+  "local" => {
+        args => "(path)",
+        desc => $descriptions->{location}->{local},
+        proc => sub {
+                                                my $self = shift;
+                                                my $parms = shift;
+                                                print get_cname($self,$parms) .
+                                                        ": " . join(" ",@_), "\n";
+                                        },
+                },
+"remote" => {
+        args => "(none)",
+        desc => $descriptions->{location}->{remote},
+        proc => sub {
+                                                my $self = shift;
+                                                my $parms = shift;
+                                                print get_cname($self,$parms) .
+                                                        ": " . join(" ",@_), "\n";
+                                        },
+                        }
+};
+
+
+our $cmd={"h" =>                { alias => "help", exclude_from_completion => 1 },
+                "?" =>          { alias => "help", exclude_from_completion =>1 },
+    "quit" =>           { alias => "exit", exclude_from_completion =>1 },
+                "help" => {
+                        desc => "Print helpful information",
+                        args => sub { shift->help_args(undef, @_); },
+                        method => sub { shift->help_call(undef, @_); }
+                },
+                "history" => { desc => "Prints the command history",
+                        doc => "Specify a number to list the last N lines of history\n" .
+                                "Pass -c to clear the command history, " .
+                                "-d NUM to delete a single item\n",
+                        args => "[-c] [-d] [number]",
+                        method => sub { shift->history_call(@_) },
+                        exclude_from_history => 1,
+                },
+                "exit" => {
+                        desc => "Exits the program.",
+                        maxargs => 0,
+                        method => sub { shift->exit_requested(1); },
+                },
+                "exists" => {
+                        desc => "Shows whether files exist",
+                        args => sub { shift->complete_files(@_); },
+      exclude_from_completion =>1 ,
+                        proc => sub {
+                                print "exists: " .
+                                        join(", ", map {-e($_) ? "<$_>":$_} @_) .
+                                        "\n";
+                        },
+                        doc =>
+<<EOL
+Pass any number of filename.
+If a file exists, it is
+printed in <angle brackets>.
+EOL
+                },
+                "show" => {
+                        desc => "An example of using subcommands",
+                        cmds => {
+                                "warranty" => { proc => "You have no warranty!\n" },
+        exclude_from_completion =>1 ,
+                                "args" => {
+                                        args => [ sub {['create', 'delete']},
+                                                \&Term::ShellUI::complete_files ],
+                                        desc => "Print the passed arguments",
+                                        method => sub {
+                                                my $self = shift;
+                                                my $parms = shift;
+                                                print $self->get_cname($parms->{cname}) .
+                                                        ": " . join(" ",@_), "\n";
+                                        },
+                                },
+                        },
+                },
+                "quit" => {
+                        desc => "Quit using Fileman",
+                        maxargs => 0,
+                        method => sub { shift->exit_requested(1); },
+                },
+
+                # Term::ShellUI normally displays "asdf: unknown command".
+                # This shows how to use the default command.  If the user
+                # type an unknown command, ShellUI calls '' if it exists.
+                '' => {
+                        proc => "No command here by that name!\n",
+                        desc => "No help for unknown commands.",
+                        doc => "Well, here's a little help: don't type them.\n",
+                },
+                "string" => {
+                        desc => "String operations",
+                        cmds => {
+                                "subs" => {
+                                        args => ["(string)", "(pos)", "(len)"],
+                                        desc => "Take STRING,POS,LEN and return a substring.",
+                                        minargs => 1, maxargs => 3,
+                                        proc => sub { print "Substring=".substr(shift,shift||0,shift||0)."\n" }, },
+                                "len" => {
+                                        args => "(any number of strings)",
+                                        desc => "Calculate length of arguments",
+                                        proc => sub { print "Length=" . join(", ", map { length } @_) . "\n" }, },
+                        },
+                },
+
+        };
+
+
+our $type = {};
+our $action = {};
+
+
+
+our $sep=sprintf("%s%s%s","\n"x 3,"#" x 70,"\n");
+our $usage = sprintf("
+\033[0;32m
+Usage: (active-memory micro structure db)
+\033[0;34m
+<action>
+%s
+
+<type>
+%s
+
+<location>
+%s
+\033[0m
+",
+sprintf("\033[0;31m%s\033[255;34m",join( " |", @{$name{action}})),
+sprintf("\033[0;31m%s\033[255;34m",join( " |", @{$name{type}})),
+sprintf("\033[0;31m%s\033[255;34m",join( " |", @{$name{location}})));
+
+
+
+printf "\n%s",$usage;
+
+
+
+
+
+
+
+sub getCommands {
+
+
+foreach (keys %name){
+        @vals = @{$name{$_}};
+
+        $ms->add_theme(
+                $_ => $name{$_}
+        );
+
+                eval "require AI::MicroStructure::$_;";
+                my $ams = "AI::MicroStructure::$_"->new;
+                push @name , $ams->name($#vals);
+
+
+                foreach my $ele(@vals){
+                        if($_ =~ /action/) {
+                                $cmd->{$ele} = {
+                                        args => sprintf("\033[0;31m%s\033[0m",join( " |", @{$name{type}})),
+                                        desc => $descriptions->{action}->{$ele},
+                                        proc => sub { printf("\033[0;31m%s\033[0m\n" ,ashex(\&set,@_)) },};
+                                my $s ={};
+
+                                foreach (keys %{$descriptions->{type}}){
+
+
+                                $s->{$_}={
+                                            args=>sprintf("\033[0;31m%s\033[0m",join( " |", @{$name{location}})),
+                                            desc =>sprintf("\n%s\n%s",$descriptions->{action}->{$ele},$descriptions->{type}->{$_}),
+                    cmds=>$location,
+                                            meth => sub { printf("\033[0;31m%s\033[0m\n" ,println(">methode",Dumper @_)) },};
+
+                                }
+                                $cmd->{$ele}->{cmds} = $s;
+
+                        }
+
+                }
+
+        }
+        return $cmd;
+}
+
+
+
+
+  my $term = new Term::ShellUI(commands =>getCommands (),history_file => '~/.active-memory');
+  print "\n" x 4 ."Using ".$term->{term}->ReadLine."\n";
+  $term->prompt(sub { "active-memory> " });
+  $term->run();
+
+1;
+__DATA__
+our $type = {
+"new" => {
+        args => "()",
+        desc => "",
+        proc => sub { print "Total=" . ashex(\&set,@_) . "\n" },
+  cmds=>$location
+},
+"my" => {
+        args => "()",
+        desc => "",
+        proc => sub { print "Total=" . ashex(\&mult,@_) . "\n" },
+        cmds=>$location
+},
+"related" => {
+        args => "()",
+        desc => "",
+        proc => sub { print "Total=" . ashex(\&mult,@_) . "\n" },
+        cmds=>$location
+},
+
+"popular" => {
+        args => "()",
+        desc => "",
+        proc => sub { print "Total=" . ashex(\&mult,@_) . "\n" },
+        cmds=>$location
+},
+
+"growing" => {
+        args => "()",
+        desc => "",
+        proc => sub { print "Total=" . ashex(\&mult,@_) . "\n" },
+        cmds=>$location
+},
+"fit" => {
+        args => "()",
+        desc => "",
+        proc => sub { print "Total=" . ashex(\&mult,@_) . "\n" },
+}
+};
+
+
+our $action = {
+                                "get" => {
+                                        args => "()",
+                                        desc => "",
+                                        proc => sub { print "Total=" . set(@_) . "\n" },cmds=>$type },
+                                "desc" => {
+                                        args => "()",
+                                        desc => "",
+                                        proc => sub { print "Total=" . mult(@_) . "\n" },cmds=>$type },
+                                "list" => {
+                                                args => "()",
+                                                desc => "",
+                                                proc => sub { print "Total=" . show(@_) . "\n" },cmds=>$type },
+                                "change" => {
+                                                args => "()",
+                                                desc => "",
+                                                proc => sub { print "Total=" . show(@_) . "\n" },cmds=>$type },
+                                "plot" => {
+                                                args => "()",
+                                                desc => "",
+                                                proc => sub { print "Total=" . show(@_) . "\n" },cmds=>$type },
+                                "cloudy" => {
+                                                args => "()",
+                                                desc => "",
+                                                proc => sub { print "Total=" . show(@_) . "\n" },cmds=>$type },
+                                "delete" => {
+                                                args => "()",
+                                                desc => "",
+                                                proc => sub { print "Total=" . show(@_) . "\n" },cmds=>$type },
+                                "set" => {
+                                                args => "()",
+                                                desc => "",
+                                                proc => sub { print "Total=" . show(@_) . "\n" },cmds=>$type },
+                                };
+
+
+sub danger
+{
+    print "Not performing task -- too dangerous!\n";
+    return 0;
+}
+
+
+
+my $term = new Term::ShellUI(commands => get_commands(),history_file => '~/.active-memory');
+print "\n" x 4 ."Using ".$term->{term}->ReadLine."\n";
+$term->prompt(sub { "active-memory> " });
+$term->run();
+
+sub get_commands
+{
+
+
+return {
+
+
+"ams" => {
+                        desc => $usage,
+
+                        cmds=> $action,
+                },
+
+                "cd" =>     { desc => "Change to directory DIR",
+                      args => sub { shift->complete_onlydirs(@_); },
+                      maxargs => 1,
+                      proc => sub { chdir($_[0] || $ENV{HOME} || $ENV{LOGDIR}) or print("Could not cd: $!\n") } },
+        "delete" => { desc => "Delete FILEs",
+                      args => sub { shift->complete_onlyfiles(@_); },
+                      minargs => 1,
+                      proc => sub { danger() && (unlink(@_) or warn "Could not delete: $!\n") } },
+        "?" =>      { syn => "help" },
+        "help" =>   { desc => "Print helpful information",
+                      args => sub { shift->help_args(undef, @_); },
+                      meth => sub { shift->help_call(undef, @_); } },
+        "ls" =>     { syn => "list" },
+        "dir" =>    { syn => "ls" },
+        "list" =>   { desc => "List files in DIRs",
+                      args => sub { shift->complete_onlydirs(@_); },
+                      proc => sub { system('ls', '-FClg', @_); } },
+        "pwd" =>    { desc => "Print the current working directory",
+                      maxargs => 0,
+                      proc => sub { system('pwd'); } },
+        "quit" =>   { desc => "Quit using Fileman",
+                      maxargs => 0,
+                      meth => sub { shift->exit_requested(1); } },
+        "rename" => { desc => "Rename FILE to NEWNAME",
+                      args => sub { shift->complete_files(@_); },
+                      minargs => 2, maxargs => 2,
+                      proc => sub { danger() && system('mv', @_); } },
+        "stat" =>   { desc => "Print out statistics on FILEs",
+                      args => sub { shift->complete_files(@_); },
+                      proc => \&print_stats },
+        "cat" =>    { syn => "view" },
+        "view" =>   { desc => "View the contents of FILEs",
+                      args => sub { shift->complete_onlyfiles(@_); },
+                      proc => sub { system('cat', @_); } },
+# these demonstrate how parts of Term::ShellUI work:
+        echo =>     { desc => "Echoes the command-line arguments",
+                      proc => sub { print join(" ", @_), "\n"; } },
+        tok =>      { desc => "Print command-line arguments with clear separations",
+                      proc => sub { print "<" . join(">, <", @_), ">\n"; } },
+        debug_complete => { desc => "Turn on completion debugging",
+                      minargs => 1, maxargs => 1, args => "0=off 1=some, 2=more, 3=tons",
+                      proc => sub { $term->{debug_complete} = $_[0] },
+                    },
+
+
+                "abort" =>  { alias => "quit" },
+                "help" =>       { desc => "Print helpful information",
+                                          args => sub { shift->help_args(undef, @_); },
+                                          method => sub { shift->help_call(undef, @_); } },
+                "quit" =>       { desc => "Quit using this program",
+                                          maxargs => 0, method => sub { shift->exit_requested(1); } },
+                "math" => {
+                        desc => "A simple calculator",
+                        cmds => {
+                                "set" => {
+                                        args => "(any number of decimal numbers)",
+                                        desc => "",
+                                        proc => sub { print "Total=" . set(@_) . "\n" }, },
+                                "mult" => {
+                                        args => "(any number of decimal numbers)",
+                                        desc => "",
+                                        proc => sub { print "Total=" . mult(@_) . "\n" }, },
+                                "hex" => {
+                                        desc => "Do math in hex",
+                                        cmds => {
+                                                "set" => {
+                                                        args => "(any number of hexadecimal numbers)",
+                                                        desc => "Add numbers together, result in hex",
+                                                        proc => sub { print "Total=" . ashex(\&set,@_) . "\n" },cmds=>$location
+},
+                                                "mult" => {
+                                                        args => "(any number of hexadecimal numbers)",
+                                                        desc => "",
+                                                        proc => sub { print "Total=" . ashex(\&mult,@_) . "\n"
+                                                        },
+                cmds=>$location
+},
+                                        },
+                                },
+                        },
+                },
+
+                "h" =>          { alias => "help", exclude_from_completion => 1 },
+                "?" =>          { alias => "help", exclude_from_completion =>1 },
+                "help" => {
+                        desc => "Print helpful information",
+                        args => sub { shift->help_args(undef, @_); },
+                        method => sub { shift->help_call(undef, @_); }
+                },
+                "history" => { desc => "Prints the command history",
+                        doc => "Specify a number to list the last N lines of history\n" .
+                                "Pass -c to clear the command history, " .
+                                "-d NUM to delete a single item\n",
+                        args => "[-c] [-d] [number]",
+                        method => sub { shift->history_call(@_) },
+                        exclude_from_history => 1,
+                },
+                "exit" => {
+                        desc => "Exits the program.",
+                        maxargs => 0,
+                        method => sub { shift->exit_requested(1); },
+                },
+                "exists" => {
+                        desc => "Shows whether files exist",
+                        args => sub { shift->complete_files(@_); },
+                        proc => sub {
+                                print "exists: " .
+                                        join(", ", map {-e($_) ? "<$_>":$_} @_) .
+                                        "\n";
+                        },
+                        doc => <<EOL,
+Comprehensive documentation for our the exists command.
+Pass any number of filename.  If a file exists, it is
+printed in <angle brackets>.
+This detailed doc can\nspan\nmany\nlines
+EOL
+                },
+                "show" => {
+                        desc => "An example of using subcommands",
+                        cmds => {
+                                "warranty" => { proc => "You have no warranty!\n" },
+                                "args" => {
+                                        args => [ sub {['create', 'delete']},
+                                                \&Term::ShellUI::complete_files ],
+                                        desc => "Print the passed arguments",
+                                        method => sub {
+                                                my $self = shift;
+                                                my $parms = shift;
+                                                print $self->get_cname($parms->{cname}) .
+                                                        ": " . join(" ",@_), "\n";
+                                        },
+                                },
+                        },
+                },
+                "quit" => {
+                        desc => "Quit using Fileman",
+                        maxargs => 0,
+                        method => sub { shift->exit_requested(1); },
+                },
+
+                # Term::ShellUI normally displays "asdf: unknown command".
+                # This shows how to use the default command.  If the user
+                # type an unknown command, ShellUI calls '' if it exists.
+                '' => {
+                        proc => "No command here by that name!\n",
+                        desc => "No help for unknown commands.",
+                        doc => "Well, here's a little help: don't type them.\n",
+                },
+                "string" => {
+                        desc => "String operations",
+                        cmds => {
+                                "subs" => {
+                                        args => ["(string)", "(pos)", "(len)"],
+                                        desc => "Take STRING,POS,LEN and return a substring.",
+                                        minargs => 1, maxargs => 3,
+                                        proc => sub { print "Substring=".substr(shift,shift||0,shift||0)."\n" }, },
+                                "len" => {
+                                        args => "(any number of strings)",
+                                        desc => "Calculate length of arguments",
+                                        proc => sub { print "Length=" . join(", ", map { length } @_) . "\n" }, },
+                        },
+                },
+        },
+        };
+
+
+
+

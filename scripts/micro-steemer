@@ -1,0 +1,10 @@
+#!/bin/bash
+for i in `ls *pdf`; do  echo `date  +"%Y-%m-%d +%H"` > $i.txt;  
+pdf2txt $i | sed 's/[^a-zA-Z0-9, ]*//g' | sed 's/Page/@@MARKER@@ Page/g' | sed 's/CHAPTER/@@MARKER@@ CHAPTER/g' | sed 's/SUMMARY/@@MARKER@@ SUMMARY/g' | sed 's/REFERENCES/@@MARKER@@ REFERENCES/g' | sed 's/OVERVIEW/@@MARKER@@ OVERVIEW/g' | sed 's/Chapter/@@MARKER@@ Chapter/g' | sed 's/Index/@@MARKER@@ Index/g' >> $i.txt;   
+
+cat $i.txt | egrep -v  "^[0-9]*[A-Z]$|[0-9][0-9]$|[0-9]$|^[*]$" | data-freq  --limit 30; 
+
+rm $i;
+
+done
+

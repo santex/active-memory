@@ -1,0 +1,48 @@
+#!/bin/bash
+#wordnet wiki lists
+
+function  semantic(){
+
+
+
+  for i in `perl -MAI::MicroStructure -le 'print for AI::MicroStructure->themes;'`;
+  do
+    for w in ` micrownet "$i" | tr "," " "`;
+      do x=`echo $w`;
+      wikilist  $x;
+    done;
+    done;
+
+}
+
+
+
+function argument(){
+  wikilist  $1 $2;
+}
+
+
+
+function explicit(){
+  for i in `perl -MAI::MicroStructure -le 'print for AI::MicroStructure->themes;'`;
+  do x=`echo $i`;
+  wikilist  $x;
+  done;
+
+}
+
+
+
+
+if [ "$1" == 1 ]                    #  Need at least one
+then
+semantic $*;
+else
+if [!"$1"]
+then
+explicit $*;
+else
+argument $1;
+fi
+fi
+exit 0;

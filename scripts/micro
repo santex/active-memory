@@ -1,0 +1,84 @@
+#!/usr/bin/perl	
+use strict;
+use warnings;
+use AI::MicroStructure;
+use Getopt::Long;
+
+my $usage = << 'EOT';
+Usage: meta [ options ] theme [ count ]
+Available options:
+  --help            : print this message and exit
+  --whitespace|--ws : return metasyntactical names separated by whitespace
+  --version         : print version information and exit
+  --themes          : print the list of themes and exit
+  --remote          : fetch the remote list (if available) and print it
+  --check           : fetch the remote list and print differences with current
+  --category <name> : category
+  --sources         : return the sources (if any) of the remote list
+EOT
+
+my %conf = ( whitespace => 0, category => '' );
+GetOptions( \%conf, "whitespace|ws!", "version", "themes", "help", "remote",
+                    "check", "category=s", "sources" )
+  or die $usage;
+
+# find out the theme name
+my $theme = shift || $AI::MicroStructure::Theme;
+if (!length $conf{category} && $theme =~ m{^([^/]+)/(.*)}s) {
+    $theme          = $1;
+    $conf{category} = $2;
+}
+die "Theme '$theme' does not exist!\n"
+  . "Available themes: @{[ AI::MicroStructure->themes ]}\n"
+  unless AI::MicroStructure->has_theme( $theme );
+
+my $module = "AI::MicroStructure::$theme";
+
+# load the remote theme if needed
+if ( $conf{remote} || $conf{check} || $conf{sources}) {
+    eval "require $module;";
+    die "Theme '$theme' is not updatable!\n"
+        unless $module->has_remotelist();
+}
+
+# informative options
+print STDERR
+"meta, a simple front-end to AI::MicroStructure version $AI::MicroStructure::VERSION\n"
+  if $conf{version};
+print STDERR $usage if $conf{help};
+print map "$_\n", AI::MicroStructure->themes if $conf{themes};
+if ( $conf{sources} ) {
+    my @sources = $module->sources( $conf{category} );
+    print map "$_\n", @sources;
+}
+exit if $conf{themes} || $conf{version} || $conf{help} || $conf{sources};
+
+# real processing starts here
+$\ = $/;
+my $sep = $conf{whitespace} ? ' ' : $\;
+
+my $meta = AI::MicroStructure->new( $theme, category => $conf{category} );
+
+my (@remote, @local);
+@remote = $module->remote_list( $conf{category} )
+    if $conf{remote} || $conf{check};
+if ( !$conf{remote} ) {
+    my $count = shift;
+    $count = 1 unless defined $count;
+    $count = 0 if $conf{check};
+    @local = $meta->name($count);
+}
+if ( $conf{check} ) {
+    my %seen;
+    $seen{$_}++ for @remote;
+    $seen{$_}-- for @local;
+    foreach my $key ( sort keys %seen ) {
+        next unless $seen{$key};
+        print $seen{$key} > 0 ? "+ $key" : "- $key";
+    }
+}
+else {
+    print join $sep, @local, @remote;
+}
+
+__END__

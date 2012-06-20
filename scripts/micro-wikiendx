@@ -1,0 +1,211 @@
+#!/usr/bin/perl -X
+use strict;
+$|++;
+use AI::MicroStructure;
+use Storable::CouchDB;
+use constant POCO_HTTP => "ua";
+use POE qw(Component::Client::HTTP);
+use AI::MicroStructure::Driver::CouchDB;
+use AI::MicroStructure::WordBlacklist;
+
+our $doc={};
+    $doc->{'user'}=`whoami`;
+    $doc->{'user'}=~s/\n//g;
+
+    $doc->{isoweek}=`date +"%V"`;
+    $doc->{date}=[split(" ",localtime)];
+
+my $stops= AI::MicroStructure::WordBlacklist::getStopWords('en'); 
+my @stops = keys %$stops;
+my $stop=join('\|',@stops);
+#die;
+@ARGV=("user","pass","localhost");
+our $x = AI::MicroStructure::Driver::CouchDB->new(uri=>"http://$ARGV[0]:$ARGV[1]\@$ARGV[2]:5984/",
+                               db=>"wikilist");
+
+
+my $TOP = 
+#"http://en.wikipedia.org/wiki/Star";
+"http://en.wikipedia.org/wiki/Category:Astronomical_catalogues";
+
+our @themes = grep { !/^(?:any)/ } AI::MicroStructure->themes;
+our $search = join("\|",@themes);
+our $collection = {};
+POE::Component::Client::HTTP->spawn(Alias => POCO_HTTP, Timeout => 30);
+POE::Component::My::Master->spawn(UA => POCO_HTTP, TODO => [$TOP]);
+$poe_kernel->run;
+exit 0;
+
+BEGIN {
+  package POE::Component::My::Master;
+  use POE::Session;             # for constants
+
+  sub spawn {
+    my $class = shift;
+    POE::Session->create
+        (package_states =>
+         [$class => [qw(_start ready done)]],
+         heap => {KIDMAX => 50, KIDS => 0, @_});
+  }
+
+  sub _start {
+    my $heap = $_[HEAP];
+    for (@{$heap->{TODO}}) {
+      $heap->{DONE}{$_ = make_canonical($_)} = 1;
+    }
+    $_[KERNEL]->yield("ready", "initial");
+  }
+
+  sub ready {
+    ## warn "ready because $_[ARG0]\n";
+    my $heap = $_[HEAP];
+    my $kernel = $_[KERNEL];
+    return if $heap->{KIDS} >= $heap->{KIDMAX};
+    return unless my $url = shift @{$heap->{TODO}};
+    ## warn "doing: $url\n";
+    $heap->{KIDS}++;
+    POE::Component::My::Checker->spawn
+        (UA => $heap->{UA},
+         URL => $url,
+         POSTBACK => $_[SESSION]->postback("done", $url),
+        );
+    $kernel->yield("ready", "looping");
+  }
+
+  sub done {
+    my $heap = $_[HEAP];
+    my ($request,$response) = @_[ARG0,ARG1];
+
+    my ($url) = @$request;
+    my @links = @{$response->[0]};
+
+    for (@links) {
+      $_ = make_canonical($_);
+      push @{$heap->{TODO}}, $_
+        unless $heap->{DONE}{$_}++;
+    }
+
+    $heap->{KIDS}--;
+    $_[KERNEL]->yield("ready", "child done");
+  }
+
+  sub make_canonical {          # not a POE
+    require URI;
+    my $uri = URI->new(shift);
+    $uri->fragment(undef);      # toss fragment
+    $uri->canonical->as_string; # return value
+  }
+
+}                               # end POE::Component::My::Master
+
+BEGIN {
+  package POE::Component::My::Checker;
+  use POE::Session;
+
+  sub spawn {
+    my $class = shift;
+    POE::Session->create
+        (package_states =>
+         [$class => [qw(_start response)]],
+         heap => {@_});
+  }
+
+
+sub trim
+{
+  
+  my $string = shift;
+  $string =  "" unless  $string;
+  $string =~ s/^\s+//;
+  $string =~ s/\s+$//;
+  $string =~ s/\t//;
+  $string =~ s/\(//;
+  $string =~ s/\)//;
+  $string =~ s/^\s//;
+  return $string;
+}
+  sub _start {
+    require HTTP::Request::Common;
+    my $heap = $_[HEAP];
+    my $url = $heap->{URL};
+    my $request = HTTP::Request::Common::GET($url);
+    $_[KERNEL]->post($heap->{UA}, 'request', 'response', $request);
+  }
+
+  sub response {
+    my $url = $_[HEAP]{URL};
+    my ($request_packet, $response_packet) = @_[ARG0, ARG1];
+    my ($request, $request_tag) = @$request_packet;
+    my ($response) = @$response_packet;
+
+    my @links=();
+
+    if ($response->is_success && $response->code==200) {
+
+
+
+
+#      next unless($url=~/http\:\/\/en.wiki.*.org\/wiki\//);
+      print ".";
+     # if ( $url=~ m/stars|algedi|nihal|mimosa|propus|zavijava|situla|marfik|alnilam|errai|sadalmelik|mesarthim|ruchbah|elnath|homam|yed_posterior|fomalhaut|alya|altair|porrima|mirfak|dabih|caph|phecda|algorab|vega|adhara|procyon|ascella|alkaid|merak|chertan|tania_australis|mirzam|kochab|syrma|phact|skat|tarazed|sualocin|menkent|phad|taygeta|miaplacidus|talitha|becrux|beid|edasich|scheat|atlas|bellatrix|kaus_australis|arneb|schedar|alkalurops|deneb|menkab|hamal|mebsuta|aludra|alula_australis|agena|tania_borealis|electra|ancha|rasalhague|alfirk|avior|kaus_borealis|dschubba|benetnasch|unukalhai|algenib|rastaban|betelgeuse|deneb_algedi|rotanev|merope|sadatoni|diphda|algol|rukbat|ankaa|gomeisa|chara|nunki|dubhe|cursa|lesath|alhena|sabik|mintaka|keid|albali|enif|wasat|media|zubenelgenubi|rigil_kentaurus|gacrux|alshain|antares|regor|alioth|peacock|izar|canopus|polaris|pollux|alphecca|arcturus|megrez|alphard|kornephoros|grumium|seginus|aspidiske|nashira|alcyone|sheratan|chort|nekkar|alpheratz|capella|sulafat|azha|atria|acubens|suhail|sadalsuud|matar|pherkad|mirach|menkalinan|shaula|pulcherrima|furud|yed_prior|markab|naos|sirius|zubeneschamali|menkar|atik|achernar|maia|celaeno|yildun|navi|mizar|nusakan|acamar|aldebaran|sadr|ruchba|alkes|saiph|deneb_kaitos|dnoces|alnitak|zaniah|thuban|acrux|arkab|adhafera|azha|benetnasch|mesarthim|gomeisa|acrux|elnath|dschubba|algieba|mizar|yed_prior|arneb|rastaban|porrima|marfik|mira|betelgeuse|kaus_media|suhail|alphard|zavijava|megrez|dubhe|merope|rotanev|yed_posterior|furud|schedar|maia|chertan|tania_borealis|antares|rasalhague|adhafera|nusakan|becrux|phad/) {
+          $doc={};
+          $doc->{'user'}=`whoami`;
+          $doc->{'user'}=~s/\n//g;
+
+
+           require HTML::Strip;
+         
+          require HTML::SimpleLinkExtor;
+
+    use WWW::Wikipedia;
+    my $wiki = WWW::Wikipedia->new();
+
+
+          my $e = HTML::SimpleLinkExtor->new($response->content);
+          $e->parse($response->content);
+          @links = $e->links;
+      
+
+          $doc->{url}=$url;
+          $doc->{text}={};
+         
+          my $result = $wiki->search($url);
+          
+          
+          if ( defined($result) && $result->text() ) { 
+            $doc->{article}= $result->text();
+          
+
+           $doc->{text}=keys %{$doc->{text}};
+        
+          $doc->{url}=$url;
+          $doc->{text}=[grep {/[(]*[)]/} $result->related()];
+    #overwrites or creates if not exists
+          
+
+           $doc->{text}=keys %{$doc->{text}};
+           warn "parsed: $url\n";
+#           $response->content
+          $x->store("$url" ,$doc);
+
+        } else {
+          warn "not HTML: $url\n";
+        }
+    } else {
+      warn "BAD (", $response->code, "): $url\n";
+    }
+# }
+
+    $_[HEAP]{POSTBACK}(\@links);
+#}
+
+  }
+}                               # end POE::Component::My::Checker
+
+
+
+END{
+
+warn $search ;
+
+}

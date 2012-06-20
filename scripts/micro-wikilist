@@ -1,0 +1,417 @@
+#!/usr/bin/perl -X
+use strict;
+use utf8;
+no utf8;
+
+use Digest::MD5 qw(md5_hex);
+
+
+$|++;
+
+
+sub __stamp {
+  my $message = shift;
+  my(@now) = localtime;
+  my $stamp = sprintf "[%d] [%02d@%02d:%02d:%02d] ",
+    $$, @now[3,2,1,0];
+  $message =~ s/^/$stamp/gm;
+  $message;
+}
+
+
+sub trim
+{
+  my $self = shift;
+	my $string = shift;
+  $string =  "" unless  $string;
+	$string =~ s/^\s+//;
+	$string =~ s/\s+$//;
+	$string =~ s/\t//;
+	$string =~ s/^\s//;
+	return $string;
+}
+
+
+$SIG{__WARN__} = sub { warn __stamp(shift) };
+$SIG{__DIE__} = sub { die __stamp(shift) };
+
+
+use Storable::CouchDB;
+use AI::MicroStructure::Driver::CouchDB;
+use AI::MicroStructure::Driver::Memcached;
+
+
+our @arg=("user","pass","localhost");
+
+our $couch = Storable::CouchDB->new(
+                                uri=>"http://$arg[0]:$arg[1]\@$arg[2]:5984/",
+                                db=>"list-data"
+                               );
+
+
+
+
+use Data::Dumper;
+use strict;
+my $verbose = 1; # useful for debugging
+our @out;
+use constant POCO_HTTP => "ua";
+use POE qw(Component::Client::HTTP);
+
+our $doc={};
+    $doc->{'user'}=`whoami`;
+    $doc->{'user'}=~s/\n//g;
+
+    $doc->{isoweek}=trim(`date +"%V"`);
+    $doc->{date}=[split(" ",localtime)];
+    
+
+our %TODO = ();
+our @TODO = [];
+our $cache = {};
+our $memcache = AI::MicroStructure::Driver::Memcached->new;
+my $base = "http://en.wikipedia.org";
+my $from_cache = sprintf("%s_from_cache",$doc->{'user'});
+
+
+if(@ARGV){
+
+
+      my @set = split("",$ARGV[0]);
+      $doc->{'query'}=$ARGV[0];
+      $doc->{'base'}=$ARGV[0];
+
+      $doc->{'markers'}=[split("_",$doc->{query})];
+
+      if($set[$#set] eq "s"){
+        $ARGV[0] = join "",@set;
+      }else{
+          $ARGV[0] = join "",@set;
+          $ARGV[0] .="s";
+      }
+
+      @TODO = [(sprintf("%s/wiki/List_of_%s",$base,$ARGV[0]))];
+
+
+
+  }
+
+if(!@ARGV){
+$memcache->store(sprintf("Listx_%s",$doc->{'user'}),{});
+@TODO=();
+exit;
+}
+
+
+print Dumper [@ARGV,@TODO];
+
+POE::Component::Client::HTTP->spawn(Alias => POCO_HTTP, Timeout => 300);
+POE::Component::My::Master->spawn(UA => POCO_HTTP, TODO => @TODO, DONE => %TODO);
+$poe_kernel->run;
+exit 0;
+
+BEGIN {
+
+
+  package POE::Component::My::Master;
+  use POE::Session;             # for constants
+  use Data::Dumper;
+  sub spawn {
+    my $class = shift;
+
+    POE::Session->create
+        (package_states =>
+         [$class => [qw(_start ready done)]],
+         heap => {KIDMAX => 100, KIDS => 0, @_});
+  }
+
+  sub _start {
+    my $heap = $_[HEAP];
+
+    for (@{$heap->{TODO}}) {
+      $heap->{DONE}{$_ = make_canonical($_)} = 1;
+    }
+    $_[KERNEL]->yield("ready", "initial");
+
+
+  }
+    sub starter {
+
+        my $url = shift;
+
+        my @ret = ();
+        require LWP::UserAgent;
+        require HTML::SimpleLinkExtor;
+        my $ua = LWP::UserAgent->new;
+        $ua->timeout(10);
+        $ua->env_proxy;
+        my $base = "http://en.wikipedia.org";
+        my $response = $ua->get($url);
+
+        if ($response->is_success) {
+            my $extor = HTML::SimpleLinkExtor->new();
+               $extor->parse($response->content);
+
+               #extract all of the links
+               my @all_links   = $extor->links;
+
+              foreach(@all_links){
+                    if($_ =~ m/^\/wiki\/List/){
+                      push @ret,sprintf("%s%s",$base,$_);
+                      $cache->{$base.$_}=0;
+                    }
+                }
+
+            return @ret;
+        }
+        else {
+            return @ret;
+        }
+    }
+
+  sub ready {
+     warn "ready because $_[ARG0]\n";
+    my $heap = $_[HEAP];
+    my $kernel = $_[KERNEL];
+    return if $heap->{KIDS} >= $heap->{KIDMAX};
+    return unless my $url = shift @{$heap->{TODO}};
+     warn "doing: $url\n";
+    my @more = ();
+    if($url=~/$ARGV[0]/){
+        @more = starter($url);
+        warn "url init $ARGV[0]";
+
+
+    }
+
+    my $next;
+
+    foreach(@more){
+
+      $next = $_;
+      push @{$heap->{TODO}} ,$_ unless(defined($heap->{DONE}{$next}));
+      $heap->{DONE}{$next}=1;
+      $heap->{KIDS}++;
+    }
+    POE::Component::My::Checker->spawn
+        (UA => $heap->{UA},
+         URL => $url,
+         POSTBACK => $_[SESSION]->postback("done", $url),
+        );
+
+
+    $kernel->yield("ready", "looping");
+  }
+
+  sub done {
+    my $heap = $_[HEAP];
+    my ($request,$response) = @_[ARG0,ARG1];
+
+    my ($url) = @$request;
+    my @links = @{$response->[0]};
+
+
+
+    for (@links) {
+      $_ = make_canonical($_);
+      push @{$heap->{TODO}}, $_
+        unless $heap->{DONE}{$_}++;
+    }
+
+    $heap->{KIDS}--;
+    $_[KERNEL]->yield("ready", "child done");
+  }
+
+  sub make_canonical {          # not a POE
+    require URI;
+    my $uri = URI->new(shift);
+    $uri->fragment(undef);      # toss fragment
+    $uri->canonical->as_string; # return value
+  }
+
+}                               # end POE::Component::My::Master
+
+
+
+BEGIN {
+  package POE::Component::My::Checker;
+  use POE::Session;
+  use Data::Dumper;
+
+  use Digest::MD5 qw(md5_hex);
+
+  sub spawn {
+    my $class = shift;
+    POE::Session->create
+        (package_states =>
+         [$class => [qw(_start response)]],
+         heap => {@_});
+  }
+
+  sub _start {
+    require HTTP::Request::Common;
+    require HTML::SimpleLinkExtor;
+    use Data::Dumper;
+
+
+    my $heap = $_[HEAP];
+    my $url = $heap->{URL};
+
+    my $request = HTTP::Request::Common::GET($url);
+    $_[KERNEL]->post($heap->{UA}, 'request', 'response', $request);
+  }
+
+
+
+sub parse_current_contributions_page {
+
+
+    my $heap = $_[HEAP];
+  my ($text, $base, $total_major, $commented_major, $total_minor, $commented_minor) = @_;
+  my ($line, @lines, $title, $comment, $minor);
+  my @links=();
+    my @ext=();
+  $base = "http://en.wikipedia.org" unless($base);
+
+  $text =~ s/\n//g;
+  $text =~ s/\<div class=[\"\']printfooter[\"\']\>.*?$//sg; #strip bottom
+  $text =~ s/(\<li\b)/\n$1/ig;                              #care only about items
+  @lines = split ("\n", $text);
+
+
+            my $extor = HTML::SimpleLinkExtor->new();
+               $extor->parse($text);
+
+               #extract all of the links
+               my @all_links   = $extor->links;
+
+              foreach(@all_links){
+                    if($_ =~ m/^\/wiki\/List/){
+                      push @links,$_;
+                      $cache->{$base.$_}=0;
+                    }else{
+                    
+                        push @ext,$_;           
+                    }
+                }
+
+
+
+#  $couch->store($key,\@all_links);
+  my $txt = {};
+  foreach $line (@lines) {
+
+    #
+
+    next unless ($line =~ /^\s*\<li\b.*?title=[\"\'](.*?)[\"\'](.*?)$/i);
+
+    $title=$1; $comment=$2; # page name is in $title, the comment is in $comment
+    $title =~ s/_/ /g;
+
+    next if ($title =~ /:/i || $title =~ /List/); # ignore everything but the article namespace
+
+    $txt->{trim($title)}=0;
+
+    $comment =~ s/\<span\s+class=[\"\']autocomment[\"\']\>.*?\<\/span\>//g; # strip default comment
+
+    if ($comment =~ /class=[\"\']minor[\"\']/) {
+      $minor=1;
+    } else {
+      $minor=0;
+    }
+
+    if ($comment =~  /\<span\s+class=[\"\']comment[\"\']\>\s*\(\s*(.*?)\s*\)\s*\<\/span\>/) {
+      $comment=$1;
+    } else {
+      $comment="";
+    }
+
+
+
+  }
+
+
+
+
+
+  return  [\@links,[keys %$txt]];
+
+}
+  sub trim
+  {
+    my $string = shift;
+      $string =  "" unless  $string;
+    $string =~ s/^\s+//;
+    $string =~ s/\s+$//;
+    $string =~ s/\t//;
+    $string =~ s/^\s//;
+    return $string;
+  }
+
+
+  sub response {
+    my $heap = $_[HEAP];
+
+    my $url = $_[HEAP]{URL};
+    my ($request_packet, $response_packet) = @_[ARG0, ARG1];
+    my ($request, $request_tag) = @$request_packet;
+    my ($response) = @$response_packet;
+
+    my @links;
+
+    if ($response->is_success) {
+              use HTML::Strip;
+              my $hs = HTML::Strip->new();
+              my $clean_text = $hs->parse($response->content);
+          $hs->eof;
+          my @rows = map{$_=trim($_);} split("\n", $clean_text);
+          foreach(@rows){
+            next if $_ eq "";
+
+           push  @{$doc->{'rows'}},$_;
+          }
+
+
+          $doc->{'url'}=$url;
+          my @x=reverse split("\/", $url);
+          $doc->{'query'}=shift @x;
+          $doc->{'query'}=~ s/List_of_//g;
+          $doc->{'markers'}=[split("_",$doc->{query})];
+          $doc->{'base'}= $ARGV[0];
+          $doc->{'payload'}= parse_current_contributions_page($response->content);
+
+
+          $couch->store(sprintf("%s_%s",$doc->{'user'},$doc->{'query'}),{data=>$doc});
+
+
+      }
+
+
+
+
+
+
+
+  }
+
+}
+
+END{
+
+ my @keys= [ keys %$cache];
+
+
+
+ $memcache->store(sprintf("%s_lists",$doc->{'user'}),$cache);
+
+
+ $couch = Storable::CouchDB->new(
+                                uri=>"http://$arg[0]:$arg[1]\@$arg[2]:5984/",
+                                db=>$doc->{'user'}
+                               );
+ 
+ $couch->store(sprintf("%s_%s_lists",$doc->{'user'},$ARGV[0]),[$cache]) unless !$#keys;
+
+ print Dumper @keys;
+
+}

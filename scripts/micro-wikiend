@@ -1,0 +1,375 @@
+#!/usr/bin/perl -w
+use strict;
+use Storable::CouchDB;
+use Digest::MD5 qw(md5_hex);
+use Data::Dumper;
+use AI::MicroStructure::Driver::CouchDB;
+use AI::MicroStructure::Driver::Memcached;
+our $memcache = AI::MicroStructure::Driver::Memcached->new;
+
+$|++;
+
+$SIG{__WARN__} = sub {
+  my $message = shift;
+  my $prefix = "[$$] [".localtime()."] ";
+  $message =~ s/^/$prefix/gm;
+#  warn $message;
+};
+
+$SIG{__DIE__} = sub {
+  my $message = shift;
+  my $prefix = "[$$] [".localtime()."] ";
+  $message =~ s/^/$prefix/gm;
+  die $message;
+};
+
+our $nogo={};
+our $doc={};
+    $doc->{'user'}=`whoami`;
+    $doc->{'user'}=~s/\n//g;
+    $doc->{'localtime'}=sprintf localtime;
+    $doc->{'trace'}=md5_hex(sprintf values %$doc);
+
+our $list  = $memcache->retrieve(sprintf("%s_lists",$doc->{'user'}));
+             $memcache->store(sprintf("%s_lists",$doc->{'user'}),{});
+our @payload = keys %$list;
+
+our @arg=("user","pass","localhost");
+our $couch = Storable::CouchDB->new(
+                                uri=>"http://$arg[0]:$arg[1]\@$arg[2]:5984/",
+                                db=>"list-data"
+                               );
+
+
+
+sub parse_current_contributions_page {
+
+
+  my @out = ();
+  my ($text, $base, $total_major, $commented_major, $total_minor, $commented_minor) = @_;
+  my ($line, @lines, $title, $comment, $minor);
+  my @links=();
+  $base = "http://en.wikipedia.org" unless($base);
+
+  $text =~ s/\n//g;
+  $text =~ s/\<div class=[\"\']printfooter[\"\']\>.*?$//sg; #strip bottom
+  $text =~ s/(\<li\b)/\n$1/ig;                              #care only about items
+  @lines = split ("\n", $text);
+
+
+            my $extor = HTML::SimpleLinkExtor->new();
+               $extor->parse($text);
+
+               #extract all of the links
+               my @all_links   = $extor->links;
+
+              foreach(@all_links){
+                    if($_ =~ m/^\/wiki\/List/){
+                      push @links,$_;
+                    }
+                }
+
+
+
+#  $couch->store($key,\@all_links);
+  my @txt = ();
+  foreach $line (@lines) {
+
+    #
+
+    next unless ($line =~ /^\s*\<li\b.*?title=[\"\'](.*?)[\"\'](.*?)$/i);
+    push @txt,trim($line);
+    $title=$1; $comment=$2; # page name is in $title, the comment is in $comment
+    $title =~ s/_/ /g;
+
+    next if ($title =~ /:/i); # ignore everything but the article namespace
+    push @out,$title;
+    $comment =~ s/\<span\s+class=[\"\']autocomment[\"\']\>.*?\<\/span\>//g; # strip default comment
+
+    if ($comment =~ /class=[\"\']minor[\"\']/) {
+      $minor=1;
+    } else {
+      $minor=0;
+    }
+
+    if ($comment =~  /\<span\s+class=[\"\']comment[\"\']\>\s*\(\s*(.*?)\s*\)\s*\<\/span\>/) {
+      $comment=$1;
+    } else {
+      $comment="";
+    }
+
+
+
+  }
+
+
+  return  [\@out];
+
+}
+  sub trim
+  {
+    my $string = shift;
+      $string =  "" unless  $string;
+    $string =~ s/^\s+//;
+    $string =~ s/\s+$//;
+    $string =~ s/\t//;
+    $string =~ s/^\s//;
+    return $string;
+  }
+
+
+
+sub generate_task_number_n {
+  my $n = shift;
+
+
+  add_task(shift @payload,sprintf("task%05d", $n), $n, "xxxxxxxxxxxx" x $n);
+}
+
+generate_task_number_n(1);
+my $MAX = $#payload;
+
+my %results;
+
+run_queue(
+           Trace => 0,
+          KidMax => 1,
+          KidTask => sub {
+            my($key, @values) = @_;
+      my($n, @payload) = @values;
+########################
+
+
+
+  print $key."\n";
+
+
+   my $url = $key;
+
+        my @ret = ();
+        require LWP::UserAgent;
+        require HTML::SimpleLinkExtor;
+        my $ua = LWP::UserAgent->new;
+        $ua->timeout(10);
+        $ua->env_proxy;
+        my $base = "http://en.wikipedia.org";
+        my $response = $ua->get($url);
+        my $cache = {};
+        if ($response->is_success) {
+            my $extor = HTML::SimpleLinkExtor->new();
+               $extor->parse($response->content);
+
+               #extract all of the links
+               my @all_links   = $extor->links;
+
+              foreach(@all_links){
+                    if($_ =~ m/^\/wiki\/List/){
+
+                       my @x=reverse split("\/", $_);
+                      $doc->{'query'}=shift @x;
+                      $doc->{'query'}=~ s/List_of_//g;
+                      $doc->{'localtime'}=split(" ",localtime);
+                      $doc->{'url'}=$url;
+                      $doc->{'query'}=~ s/List_of_//g;
+                      $doc->{'markers'}=[split("_",$doc->{query})];
+
+                      
+                      if(!defined($nogo->{$doc->{'query'}}) && $nogo->{$doc->{'query'}}!=1) {
+                          $doc->{'payload'}= parse_current_contributions_page($response->content);
+                          $couch->store(sprintf("%s_%s",$doc->{'user'},$doc->{'query'}),$doc);
+
+                          $nogo->{$doc->{'query'}}=1;
+                      }
+
+
+
+                    }
+                }
+
+
+        }
+
+
+
+
+
+
+
+
+
+########################payload
+
+
+
+
+            return ($key,2 * $n, 2 * $n + 1);
+          },
+          ResultTask => sub {
+            my($key, @responses) = @_;
+
+            my($new_2n, $new_2n_plus_1) = @responses;
+            if ($results{$key}++) {
+              print "DUPLICATE ";
+            } else {
+              for ($new_2n, $new_2n_plus_1) {
+                generate_task_number_n($_) if $_ < $MAX;
+              }
+            }
+
+
+          },
+         );
+
+
+
+
+### forking task manager from here down
+
+use IO::Select;
+use IO::Pipe;
+use POSIX qw(WNOHANG);
+use Storable qw(freeze thaw);
+
+BEGIN {                         # task manager
+  my %tasks;
+
+  my @queue;
+
+
+
+
+
+
+  sub add_task { ## external
+    my $key = shift;
+    $tasks{$key} = [@_];
+  }
+
+  sub remove_task {
+    delete $tasks{+shift};
+  }
+
+  sub task_count {
+    scalar keys %tasks;
+  }
+
+  sub next_task {
+    return undef unless task_count() > 0;
+    {
+      @queue = sort keys %tasks unless @queue;
+      my $key = shift @queue;
+      redo unless exists $tasks{$key}; # might have disappeared
+      freeze([$key, @{$tasks{$key}}]);
+    }
+  }
+}
+
+BEGIN {                         # kid manager
+  my %kids;
+  my $kid_max = 30;
+  my $kid_task;
+  my $result_task;
+  my $trace = 0;
+
+  sub run_queue { ## external
+    {
+      my %parms = @_;
+      $kid_max = delete $parms{KidMax} if exists $parms{KidMax};
+      $kid_task = delete $parms{KidTask} if exists $parms{KidTask};
+      $result_task = delete $parms{ResultTask} if exists $parms{ResultTask};
+      $trace = delete $parms{Trace} if exists $parms{Trace};
+      die "unknown parameters for run_queue: ", join " ", keys %parms
+        if keys %parms;
+    }
+
+    {
+      warn "to go: ", task_count() if $trace;
+      ## reap kids
+      while ((my $kid = waitpid(-1, WNOHANG)) > 0) {
+        warn "$kid reaped" if $trace;
+        delete $kids{$kid};
+      }
+      ## verify live kids
+      for my $kid (keys %kids) {
+        next if kill 0, $kid;
+        warn "*** $kid found missing ***"; # shouldn't happen normally
+        delete $kids{$kid};
+      }
+      ## launch kids
+      if (task_count() > keys %kids and
+          keys %kids < $kid_max and
+          my $kid = create_kid()) {
+        send_to_kid($kid, next_task());
+      }
+      ## see if any ready results
+    READY:
+      for my $ready (IO::Select->new(map $_->[1], values %kids)->can_read(1)) {
+        ## gotta brute force this, grr, good thing data is small...
+        my ($kid) = grep $kids{$_}[1] == $ready, keys %kids;
+        {
+          last unless read($ready, my $length, 4) == 4;
+          $length = unpack "L", $length;
+          last unless read($ready, my $message, $length) == $length;
+          $message = thaw($message) or die "Cannot thaw";
+          remove_task($message->[0]);
+          $result_task->(@$message);
+          if (task_count() >= keys %kids) {
+            send_to_kid($kid, next_task());
+          } else {              # close it down
+            $kids{$kid}[0]->close;
+          }
+          next READY;
+        }
+        ## something broken with this kid...
+        kill 15, $kid;
+        delete $kids{$kid};     # forget about it
+      }
+      redo if %kids or task_count();
+    }
+  }
+
+  sub create_kid {
+    my $to_kid = IO::Pipe->new;
+    my $from_kid = IO::Pipe->new;
+    defined (my $kid = fork) or return; # if can't fork, try to make do
+    unless ($kid) {             # I'm the kid
+      $to_kid->reader;
+      $from_kid->writer;
+      $from_kid->autoflush(1);
+      do_kid($to_kid, $from_kid);
+      exit 0;                   # should not be reached
+    }
+    $from_kid->reader;
+    $to_kid->writer;
+    $to_kid->autoflush(1);
+    $kids{$kid} = [$to_kid, $from_kid];
+    $kid;
+  }
+
+  sub send_to_kid {
+    my ($kid, $message) = @_;
+    {
+      ## if we get a SIGPIPE here, no biggy, we'll requeue request later
+      local $SIG{PIPE} = 'IGNORE';
+      print { $kids{$kid}[0] } pack("L", length($message)), $message;
+    }
+  }
+
+  sub do_kid {
+    my($input, $output) = @_;
+    warn "kid launched" if $trace;
+    {
+      last unless read($input, my $length, 4) == 4;
+      $length = unpack "L", $length;
+      last unless read($input, my $message, $length) == $length;
+      $message = thaw($message) or die "Cannot thaw";
+      my ($key, @values) = @$message;
+      my @results = $kid_task->($key, @values);
+      $message = freeze([$key, @results]);
+       print $output pack("L", length($message)), $message;
+      redo;
+    }
+    warn "kid ending" if $trace;
+    exit 0;
+  }
+}
