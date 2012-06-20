@@ -68,6 +68,79 @@ active-memory
 
   Not finished, any help is welcome
 
+
+
+#### Runing it
+
+
+
+#!/usr/bin/perl
+use strict;
+use warnings;
+use JSON;
+use Data::Dumper;
+use AI::MicroStructure;
+use AI::MicroStructure::Ontology;
+use AI::MicroStructure::Fitnes;
+use AI::MicroStructure::Categorizer;
+use AI::MicroStructure::Memorizer;
+use AI::MicroStructure::Tree;
+use AI::MicroStructure::Collection;
+#use AI::MicroStructure::IOMicroy;
+
+
+
+@ARGV=("user",
+      "pass",
+      "localhost");
+
+my $configure = (
+{
+  user=>$ARGV[0],
+  pass=>$ARGV[1],
+  dbfile=>sprintf("%s/active-memory/berkeley.dat",$ENV{HOME}),
+  couchhost=>$ARGV[2],
+  cachhost=>"localhost",
+  cachhost=>"localhost",
+  categories=>undef,
+  couchport=>5984,
+  couchdbname=>"user",
+  cacheport=>22922,
+  uri=>"",
+  home=>$ENV{HOME},
+  
+});
+
+$configure->{bookpath}=sprintf("%s/myperl/test/txt/ok",
+                                $configure->{home});
+
+$configure->{uri} = 
+    sprintf("http://%s:%s\@%s:%s/",
+        $configure->{user},
+        $configure->{pass},
+        $configure->{couchhost},
+        $configure->{couchport});
+
+
+my $memo   = AI::MicroStructure::Memorizer->new(bookpath=>$configure->{bookpath});
+my $driver = AI::MicroStructure::Driver->new($configure);
+my $fitnes = AI::MicroStructure::Fitnes->new($configure);
+my $ontlgy = AI::MicroStructure::Ontology->new($configure);
+my $cat    = AI::MicroStructure::Categorizer->new(bookpath=>$configure->{bookpath});
+
+
+my $x = AI::MicroStructure->new(
+"AI::MicroStructure::Driver"      =>  $driver,
+"AI::MicroStructure::Ontology"    =>  $ontlgy,
+"AI::MicroStructure::Fitnes"      =>  $fitnes,
+"AI::MicroStructure::Memorizer"   =>  $memo,
+"AI::MicroStructure::Categorizer" =>  $cat,
+);
+
+
+1;
+
+
 #### Implementation
   → [my frontend lab!](http://quantup.com)
 
