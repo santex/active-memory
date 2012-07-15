@@ -1,6 +1,17 @@
 active-memory
 ===================
 
+
+```
+
+#### Implementation
+  → [my frontend lab!](http://algoservice.com:5984/wikilist/micro/idx-002.html)
+
+
+
+```
+
+
 ## Documentation
 
   genetically organised data in a semantic environment
