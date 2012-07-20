@@ -1,4 +1,0 @@
-use Acme::MetaSyntactic;
-my $b = Acme::MetaSyntactic->new( 'batman' );
-print $b->name;
-

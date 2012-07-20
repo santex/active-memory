@@ -1,2 +1,0 @@
-use Acme::MetaSyntactic ':all';
-print metabatman();

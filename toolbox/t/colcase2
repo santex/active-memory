@@ -1,3 +1,0 @@
-use Acme::MetaSyntactic 'colors';
-print metacolors();
-

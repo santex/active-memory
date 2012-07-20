@@ -1,4 +1,0 @@
-use Acme::MetaSyntactic;
-my $h = Acme::MetaSyntactic->new( 'haddock', lang => 'en' );
-print $h->name;
-

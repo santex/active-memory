@@ -1,3 +1,0 @@
-use Acme::MetaSyntactic::batman;
-print metabatman();
-
