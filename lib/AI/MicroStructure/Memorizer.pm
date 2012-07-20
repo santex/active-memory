@@ -553,6 +553,8 @@ sub getDocList{
 
 1;
 
+
+# AI::MicroStructure::MemorizersampleRun();
 __DATA__
 
   

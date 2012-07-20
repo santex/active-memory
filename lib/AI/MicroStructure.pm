@@ -1,4 +1,4 @@
-#!/usr/bin/perl	-X
+#!/usr/bin/perl -W
 package AI::MicroStructure;
 use strict;
 use warnings;
@@ -9,31 +9,50 @@ use File::Glob;
 use Data::Dumper;
 use AI::MicroStructure::Driver;
 our $VERSION = '0.01';
-our $Theme = 'stars'; # default theme
+our $Theme = 'any'; # default theme
 our %META;
 our %MODS;
+our %ALIEN;
 # private class method
 our $str = "[A-Z]";
-our $special = "foo|any";
+our $special = "any";
+our $search;
+our $data={};
+our $item="";
+our @items;
+our @a=();
 
-sub find_themes {
-
-
- my $themes = {};
+our ($new,$debug, $write) =(0,0,0); 
  
-   foreach(@INC)
-   {
+if( grep{/\bnew\b/} @ARGV ){ $new = 1; cleanArgs("new"); }
+if( grep{/\bdebug\b/} @ARGV ){$debug = 1; cleanArgs("debug"); }; 
+if( grep{/\bwrite\b/} @ARGV ){ $write = 1; cleanArgs("write");  }; 
 
-    my @set =   grep !/($str)/,   map  @$_,
-                map  { [ ( fileparse( $_, qr/\.pm$/ ) )[0] => $_ ] }
-                map  { File::Glob::bsd_glob( File::Spec->catfile( $_, qw( AI MicroStructure *.pm ) ) ) } $_;
-          
-    foreach(grep !/$special/,@set){
-      $themes->{$_}=$_;
-    }
-  }
-  return %$themes;
+
+sub cleanArgs{
+    my ($key) = @_; 
+    my @tmp=();
+    foreach(@ARGV){ 
+    push @tmp,$_ unless($_=~/$key/);}
+    
+    @ARGV=@tmp;
 }
+# private class method
+sub find_themes {
+    my ( $class, @dirs ) = @_;
+      $ALIEN{"base"} =  [map  @$_,
+              grep { $_->[0] !~ /^([A-Z]|foo)/ }    # remove the non-theme subclasses
+              map  { [ ( fileparse( $_, qr/\.pm$/ ) )[0] => $_ ] }
+              map  { File::Glob::bsd_glob( File::Spec->catfile( $_, qw( AI MicroStructure *.pm ) ) ) } @dirs];
+              
+      $ALIEN{"store"}=[];
+      
+      
+      return @{$ALIEN{"base"}};
+}
+
+# fetch the list of standard themes
+
 
 sub find_modules {
 
@@ -45,9 +64,9 @@ sub find_modules {
     my @set =  grep /($str)/,   map  @$_,
                 map  { [ ( fileparse( $_, qr/\.pm$/ ) )[0] => $_ ] }
                 map  { File::Glob::bsd_glob( File::Spec->catfile( $_, qw( AI MicroStructure *.pm ) ) ) } $_;
-          
+
     foreach(@set){
-      $themes->{$_}=$_ unless($_=~/(usr\/local|basis)/);
+      $themes->{$_}=$_;# unless($_=~/(usr\/local|basis)/);
     }
   }
   return %$themes;
@@ -55,20 +74,24 @@ sub find_modules {
 
 
 
-# fetch the list of standard themes
 $META{$_} = 0 for keys %{{__PACKAGE__->find_themes(@INC)} };
-$MODS{$_} = 0 for keys %{{__PACKAGE__->find_modules(@INC)} };
+$MODS{$_} = $_ for keys %{{__PACKAGE__->find_modules(@INC)} };
+$search = join("|",keys %META);
+if( grep{/$search/} @ARGV ){ $Theme = $ARGV[0]; }; 
 
-#print $MODS{$_};
+# fetch the list of standard themes
+
+#print Dumper keys %META;
 sub getComponents(){
-my $x= sprintf("%s",Dumper \%META);
+  
+  my $x= sprintf("%s",Dumper keys %META);
 
-return $x;
+  return $x;
 }
 
 
 # the functions actually hide an instance
-my $meta = AI::MicroStructure->new( $Theme);
+my $meta = AI::MicroStructure->new($Theme);
 
 # END OF INITIALISATION
 
@@ -104,17 +127,17 @@ sub new {
     $theme = $Theme unless $theme; # same default everywhere
  #   my $driver = {};
 #       $driver = AI::MicroStructure::Driver->new;
-        
+
     # defer croaking until name() is actually called
     bless { theme => $theme, tools => { @tools }, meta => {}}, $class;
-    
 
-    
+
+
     #if(defined($driverarg) && join("" ,@_)  =~/couch|cache|berkeley/){
 
-        
-   
-    
+
+
+
 }
 
 sub _rearrange{
@@ -156,7 +179,7 @@ EOC
 # this class method is used by the other AI::MicroStructure classes
 sub load_data {
     my ($class, $theme ) = @_;
-    my $data = {};
+    $data = {};
 
     my $fh;
     { no strict 'refs'; $fh = *{"$theme\::DATA"}{IO}; }
@@ -188,6 +211,11 @@ sub load_data {
         $$_ =~ s/\s*\z//;
         $$_ =~ s/\s+/ /g;
     }
+    
+    if($debug) {
+      print Dumper $data;
+    }
+    
     return $data;
 }
 
@@ -246,20 +274,20 @@ sub count {
 
 sub trim
 {
-	my $string = shift;
+    my $string = shift;
   $string =  "" unless  $string;
-	$string =~ s/^\s+//;
-	$string =~ s/\s+$//;
-	$string =~ s/\t//;
-	$string =~ s/^\s//;
-	return $string;
+    $string =~ s/^\s+//;
+    $string =~ s/\s+$//;
+    $string =~ s/\t//;
+    $string =~ s/^\s//;
+    return $string;
 }
 
 
 sub getBundle {
 
     my $self = shift;
-  
+
 
 
 my @themes = grep { !/^(?:any)/ } AI::MicroStructure->themes;
@@ -268,13 +296,13 @@ my @search=[];
 for my $theme (@themes) {
     no strict 'refs';
     eval "require AI::MicroStructure::$theme;";
- 
+
     my %isa = map { $_ => 1 } @{"AI::MicroStructure::$theme\::ISA"};
     if( exists $isa{'AI::MicroStructure::Locale'} ) {
         for my $lang ( "AI::MicroStructure::$theme"->languages() ) {
             push @metas,
                 ["AI::MicroStructure::$theme"->new( lang => $lang ),$lang];
-                  
+
 
         }
     }
@@ -300,21 +328,104 @@ for my $test (@metas) {
     $all->{$key}=[$test->[1],$meta->name($items)];
 
 }
- 
- 
- 
+
+
+
  return $all;
 
 
 
 
 
+
+}
+
+
+sub save_cat {
+  my $data = shift;
+  my $dat;  
+  my $ret = "";
+
+  
+  foreach my $key(sort keys %{$data} ) {
+      next unless($_);
+      #ref $hash->{$_} eq "HASH"
+      if(ref $data->{$key} eq "HASH"){
+        $ret .= "\n".save_cat($data->{$key});     
+      }else{
+        $dat = $data->{$key};
+        $dat =~ s/ /\n /g;
+        
+        $ret .= "# ".($key=~/names|default/?$key:"names ".$key);
+        $ret .= "\n ".$dat."\n";
+      }
+  
+  }
+  
+  return $ret;
+
+}
+
+sub save_default {
+
+my $dat;
+my @file = grep{/$Theme/}map{File::Glob::bsd_glob( File::Spec->catfile( $_, qw( AI MicroStructure *.pm ) ) )}@INC;
+#  print Dumper [@ARGV,$data,$Theme,@file];
+  
+  if(@file){
+  open(SELF,"+<$file[0]") || die $!;
+  
+#  print Dumper <SELF>;
+  while(<SELF>){last if /^__DATA__/}
+  
+  truncate(SELF,tell SELF);
     
+  print SELF save_cat($data);
+        
+  truncate(SELF,tell SELF);
+  close SELF;
+  }
+ 
+}
+sub openData{
+
+
+while(<DATA>){
+  chomp; 
+  if($_=~/^#\s*(\w+.*)$/) {
+      @a=split(" ",$1);
+      if($#a){ 
+            $data->{$a[0]}->{$a[1]}="";        
+      }else{
+            $data->{$1}="";
+      }
+      $item=$1 unless($#a);
+      
+  }else{
+
+      my @keys = split m!\s+|\s*/\s*!,$_;
+      foreach(sort @keys){
+        if($#a){
+        $data->{$a[0]}->{$a[1]} .= " $_" unless($_ eq "");
+        }else{
+        $data->{$item} .= " $_" unless($_ eq "");
+        }
+      }
+          
+  };
+
+}
+
+return $data;
+}
+
+
+END{
+save_default() unless(!$write);
 }
 
 
 1;
 
-__END__
-
-
+__DATA__
+1

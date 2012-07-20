@@ -60,41 +60,41 @@ sub parse {
 
 
 my %_operations = (
-		   '&' => {
-		       min     => sub { (sort {$a <=> $b} @_)[0] },
-		       product => sub { my $p = 1; $p *= $_ for @_; $p },
-		       default => 'min',
-		   },
-		   '|'  => {
-		       max     => sub { (sort {$a <=> $b} @_)[-1] },
-		       sum     => sub { my $s = 0; $s += $_ for @_; $s > 1 ? 1 : $s },
-		       default => 'max',
-		   },
-		   '!' => {
-		       complement => sub { 1 - $_[0] },
-		       custom  => sub {},
-		       default    => 'complement',
-		   },
-		   );
+       '&' => {
+           min     => sub { (sort {$a <=> $b} @_)[0] },
+           product => sub { my $p = 1; $p *= $_ for @_; $p },
+           default => 'min',
+       },
+       '|'  => {
+           max     => sub { (sort {$a <=> $b} @_)[-1] },
+           sum     => sub { my $s = 0; $s += $_ for @_; $s > 1 ? 1 : $s },
+           default => 'max',
+       },
+       '!' => {
+           complement => sub { 1 - $_[0] },
+           custom  => sub {},
+           default    => 'complement',
+       },
+       );
 
-  
+
   $args{content} =~ s{
-		   ^(?:\.I)?\s+(\d+)\n  # ID number - becomes document name
-		   \.C\n
-		   ([^\n]+)\n     # Categories
-		   \.T\n
-		   (.+)\n+        # Title
-		   \.W\n
-		  }
+       ^(?:\.I)?\s+(\d+)\n  # ID number - becomes document name
+       \.C\n
+       ([^\n]+)\n     # Categories
+       \.T\n
+       (.+)\n+        # Title
+       \.W\n
+      }
                   {}sx
-     
+
      or warn "Malformed record: $args{content}";
-  
+
   my ($id, $categories, $title) = ($1, $2, $3);
 
   $self->{name} = $id;
   $self->{content} = { title => $title,
-		       body  => $args{content} };
+           body  => $args{content} };
 
   my @categories = $categories =~ m/(.*?)\s+\d+[\s;]*/g;
   @categories = map AI::Categorizer::Category->by_name(name => $_), @categories;

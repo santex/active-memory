@@ -4,6 +4,7 @@ use warnings;
 use Carp;
 use Data::Dumper;
 # method that extracts the items from the remote content and returns them
+
 sub extract {
     my $class = ref $_[0] || $_[0];
     no strict 'refs';
@@ -88,6 +89,19 @@ sub remote_list {
     return grep { !$seen{$_}++ } @items;
 }
 
+
+sub clean {
+  my $str = shift;
+     $str = AI::MicroStructure::RemoteList::tr_utf8_basic($str);
+     
+     $str = AI::MicroStructure::RemoteList::tr_accent($str);
+     
+     
+     return $str;
+
+}
+
+
 #
 # transformation subroutines
 #
@@ -132,6 +146,8 @@ sub tr_utf8_basic {
     $str =~ s/$utf_re/$utf2asc{$1}/go;
     return $str;
 }
+
+
 
 1;
 

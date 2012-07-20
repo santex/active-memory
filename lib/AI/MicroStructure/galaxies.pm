@@ -2,8 +2,6 @@ package AI::MicroStructure::galaxies;
 use strict;
 use AI::MicroStructure::MultiList;
 our @ISA = qw( AI::MicroStructure::MultiList );
-__PACKAGE__->init();
-
 our %Remote = (
     source => {
         nearest => 'http://en.wikipedia.org/wiki/List_of_galaxies',
@@ -16,8 +14,7 @@ our %Remote = (
     },
     extract => sub {
         return 
-            map { AI::MicroStructure::RemoteList::tr_accent($_) }
-            map { AI::MicroStructure::RemoteList::tr_utf8_basic($_) }
+            map { AI::MicroStructure::RemoteList::clean($_) }
             grep { ! /^List_|_Groups$/ }
             map { s/[-\s']/_/g; s/[."]//g; $_ }
             $_[0]
@@ -26,11 +23,45 @@ our %Remote = (
     ,
 );
 
+__PACKAGE__->init();
+
 
 1;
 
 __DATA__
+version=0
 # names nearest
-# names polar_ring
-# names spiral_galaxies
+  Andromeda
+  Leo_I
+  Leo_II
+  Cassiopeia
+  Pisces
+  Phoenix
+  Hydra
+  Sagittarius
+  Barycentric_coordinates
+  Pegasus
+  Canes_Venatici_I
+  Canes_Venatici_II
+  Sculptor
+  Carina
+  dwarf_galaxy
+  Draco
+  Virgo
+  Indus
+  Sculptor
+  Aquarius
+  Grus
+  Capricornus
 # names local_group
+  Galaxy_10R
+  Galaxy_11
+  Galaxy_15
+  Galaxy_17
+  Galaxy_18
+  Galaxy_25
+  Galaxy_26
+  Galaxy_27
+  Galaxy_28
+  Galaxy_3C
+  Galaxy_4R

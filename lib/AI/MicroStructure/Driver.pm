@@ -1,4 +1,4 @@
-#!/usr/bin/perl	-w
+#!/usr/bin/perl	-W
 package AI::MicroStructure::Driver;
 use strict;
 use warnings;
