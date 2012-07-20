@@ -6,41 +6,11 @@ use lib '../lib';
 use Term::ShellUI;
 use File::stat qw(:FIELDS);
 use Cwd;
-use AI::MicroStructure::Plug;
 use AnyDBM_File;
 use Fcntl;
 use JSON;
 use Data::Dumper;
 use vars '%brain';
-my $dbfile = "active-memory.store";
-tie (my %brain, "AnyDBM_File", $dbfile, O_CREAT|O_RDWR, 0600) or die "Can't open $dbfile: $!\n";
-&create_new unless keys %brain;
-
-
-
-print Dumper \%brain;
-
-#&create_new unless keys %brain;
-
-
-sub create_new {
-
-  $brain{json} = File::Spec->catfile("/var/www/meta.json" );
-  $brain{stars} = {};
-  $brain{planets} ={};
-  $brain{galaxy} = {};
-
-}
-
-
-END{
-
-  untie %brain;
-
-
-}
-
-
 our $ms =  AI::MicroStructure->new;
 
 our %name = (action=>[qw/list get set/],#search get set   change plot cloudy

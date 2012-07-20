@@ -76,10 +76,9 @@ sub thread {
     while( my $line = $Q->dequeue ) {
 
         printf "%3d: (%10d of %10d) :%s\n", $tid, $pos, $size, $line;
-        
-        $cache->set(md5_hex($line), catfile($line));
-        
-#        sleep rand 5;
+	if(!$cache->get(md5_hex($line))){        
+        	$cache->set(md5_hex($line), catfile($line));
+	}        
     }
 }
 

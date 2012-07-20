@@ -1,9 +1,18 @@
 #! /bin/bash
-IFS='
-' # wegen Dateien mit Leerzeichen
 if [ "$1" == "" ] ; then
 echo "you need a word you want to check"
 exit 0;
 fi
-wn $1 -synsn | sed '1,6d' |sed 's/Sense [[:digit:]]//g' | sed 's/[[:space:]]*=> //' | sed '/^$/d' | sed 's/ //g' | grep -iv $1 | tr '\n' ',' 
-wn $1 -synsv | sed '1,6d' |sed 's/Sense [[:digit:]]//g' | sed 's/[[:space:]]*=> //' | sed '/^$/d' | sed 's/ //g' | grep -iv $1 | tr '\n' ',';echo 
+
+
+for i in $@; do
+echo -e "\n~~~@~~~"
+wn $i -synsn | sed '1,6d' |sed 's/Sense [[:digit:]]//g' | sed 's/[[:space:]]*=> //' | sed '/^$/d' | sed 's/ //g' | grep -iv $i | tr '\n' ' ';
+echo -e "\n~~~@~~~"
+wn $i -synsv | sed '1,6d' |sed 's/Sense [[:digit:]]//g' | sed 's/[[:space:]]*=> //' | sed '/^$/d' | sed 's/ //g' | grep -iv $i | tr '\n' ' ';
+echo -e "\n~~~@~~~"
+wn $i -hypen | sed '1,6d' |sed 's/Sense [[:digit:]]//g' | sed 's/[[:space:]]*=> //' | sed '/^$/d' | sed 's/ //g' | grep -iv $i | tr '\n' ' ';
+echo -e "\n~~~@~~~"
+wn $i -hypon | sed '1,6d' |sed 's/Sense [[:digit:]]//g' | sed 's/[[:space:]]*=> //' | sed '/^$/d' | sed 's/ //g' | grep -iv $i | tr '\n' ' ';
+echo -e "\n~~~@~~~"
+done;

@@ -18,7 +18,7 @@ fi
 
 PATH="/usr/bin:/bin:/usr/sbin:/sbin"
 
-INSTALL_DIR="/usr/lib/activedata"
+INSTALL_DIR="/usr/lib/active-memory"
 
 
 
@@ -35,6 +35,8 @@ TOOLS_STM="micro-steemer"
 TOOLS_REN="micro-rename"
 TOOLS_WST="micro-wnwikilist"
 
+CONFIG="$HOME/$NAME/config.txt"
+DRIVER="$HOME/$NAME/driver.txt"
 
 [ ! -d $DROP ] && mkdir -p $DROP;
 [ ! -f $LOG ] && echo $progname" "$USER" "$LOG" " > $LOG;
@@ -50,15 +52,7 @@ themes=$(perl -MAI::MicroStructure -E  "print AI::MicroStructure::themes(100);")
 function usage_and_exit
 {
     cat<<EOF
-Created (and fill) database tables for FinanceQuant
-Usage: $progname [-m] [-n databasename] [-h]
-Options:
-    -m      Use MySQL instead of PostgreSQL
-    -n SOMENAME Create database as SOMENAME instead of FinanceQuant
-    -l dbfile   Use SQLite3 (current version) as backend with file 'dbfile'
-    -o dbfile   Use SQLite (old v2) as backend with file 'dbfile'
-    -s      Schema only -- Do not fill the database
-    -h      Show this help
+Created (and fill) micro-structure's
 EOF
     exit 0
 }
@@ -85,7 +79,7 @@ gauge() {
         echo $I
         sleep 0.01
       done
-    echo 100; } | dialog --backtitle "Dialog - Progress sample" \
+    echo 100; } | dialog --backtitle "active-memory - Progress" \
                          --gauge "Progress" 6 60 0
 
 
@@ -105,7 +99,7 @@ file_menu() {
         let n+=1
     done
     IFS=$IFS_BAK
-    dialog --backtitle "Dialog - Sample menu with variable items" \
+    dialog --backtitle "Variable items" \
            --title "Select a file" --menu \
            "Choose one of the menu points" 16 40 8 $menuitems 2> $_temp
     if [ $? -eq 0 ]; then
@@ -117,9 +111,9 @@ file_menu() {
 ### File or Directory selection menu with dialog
 word_menu() {
 
- dialog --backtitle "Dialog - InputBox sample"\
+ dialog --backtitle "active-memory - InputBox"\
            --inputbox "Enter a line, please" 18 152 2>$_temp
-    words=`x=$(cat $_temp); cat /home/hagen/myperl/test/wordlist.out | grep $x`
+    words=`x=$(cat $_temp); cat $HOME/myperl/test/wordlist.out | grep $x`
 
 
     fileroot=$DROP
@@ -133,7 +127,7 @@ word_menu() {
         let n+=1
     done
     IFS=$IFS_BAK
-    dialog --backtitle "Dialog - Sample menu with variable items" \
+    dialog --backtitle "active-memory - menu with variable items" \
            --title "Select a file" --menu \
            "Choose one of the menu points" 16 40 8 $menuitems 2> $_temp
     if [ $? -eq 0 ]; then
@@ -144,9 +138,9 @@ word_menu() {
     fi
 }
 
-### File Select sample
+### File Select
 file_select() {
-    dialog --backtitle "Dialog - fselect sample"\
+    dialog --backtitle "active-memory - fselect"\
            --begin 3 10 --title " use [blank] key to select "\
            --fselect "$HOME/" 10 60 2>$_temp
 
@@ -158,7 +152,7 @@ file_select() {
 calendar() {
     today=date +"%d %m %Y"
     echo "heute=$today"
-    dialog --backtitle "Dialog - Calendar sample" \
+    dialog --backtitle "active-memory - Calendar" \
            --calendar "choose a date" 2 1 $today 2>$_temp
     datum=`cat $_temp`
     dialog --title " Date selected " --msgbox "\nYour date: $datum" 6 30
@@ -171,9 +165,9 @@ calendar() {
 
 checklist() {
 
- dialog --backtitle "Dialog - InputBox sample"\
+ dialog --backtitle "active-memory - InputBox"\
            --inputbox "Enter a line, please" 18 152 2>$_temp
-    words=`x=$(cat $_temp); cat /home/hagen/myperl/test/wordlist.out | grep $x`
+    words=`x=$(cat $_temp); cat  $HOME/myperl/test/wordlist.out | grep $x`
 
    # number the lines
 SPLITTED=$( echo $words | sed 's/ /\n/g' | awk -- '{print NR, $0, 0 }' )
@@ -187,15 +181,50 @@ for X in $OUT ; do
     # inefficiently print out the text corresponding to the selections
     CHOSEN=$( echo $words | sed 's/ /\n/g' | awk -- "NR==$X {print \$0 }" )
 
-dialog --backtitle "Dialog - MessageBox sample" \
+dialog --backtitle "active-memory - MessageBox" \
    --msgbox "$CHOSEN\n$DVER" 9 52
 
 done;
 }
 
-### Radio List - single select sample ###
+
+
+
+
+
+driverlist() {
+
+# dialog --backtitle "active-memory - InputBox"\
+ #          --inputbox "Enter a line, please" 18 152 2>$_temp
+ words="couchDB memcached berkeleysDB file"
+for X in $words ; do
+  echo $X;
+done    
+    #`x=$(cat $_temp); cat  $HOME/myperl/test/wordlist.out | grep $x`
+
+   # number the lines
+SPLITTED=$( echo $words | sed 's/ /\n/g' | awk -- '{print NR, $0, 0 }' )
+
+# prompt via dialog (output-fd=1 is so that dialog gui doesn't go to subshell)
+OUT=$(dialog --output-fd 1 --ok-label Select --separate-output --checklist Choose 0 50 22 $SPLITTED)
+
+
+# loop through selected numbers
+for X in $OUT ; do
+    # inefficiently print out the text corresponding to the selections
+    CHOSEN=$( echo $words | sed 's/ /\n/g' | awk -- "NR==$X {print \$0 }" )
+
+dialog --backtitle "active-memory - MessageBox" \
+   --msgbox "$CHOSEN\n$DVER" 9 52
+
+
+
+done;
+}
+
+### Radio List - single select ###
 radiolist() {
-    dialog --backtitle "Dialog - RadioList (single select) sample" \
+    dialog --backtitle "active-memory - RadioList (single select)" \
            --radiolist "tag item to choose" 15 50 8 \
            01 "first item to select" off\
            02 "second item - on by default" on\
@@ -207,32 +236,32 @@ radiolist() {
 
 
 
-   #dialog --backtitle "Dialog - InputBox sample"\
+   #dialog --backtitle "active-memory - InputBox"\
  #          --inputbox "Enter a line, please" 18 152 2>$_temp
   #  words=`x=$(cat $_temp); cat /home/hagen/myperl/test/wordlist.out | grep $x`
 #    result=`echo -n $words | tr "\t" "\n"`
 
 
-### Input Box sample
+### Input Box
 inputbox() {
-    dialog --backtitle "Dialog - InputBox sample"\
+    dialog --backtitle "active-memory - InputBox"\
            --inputbox "Enter a line, please" 8 52 2>$_temp
-    words=`x=$(cat $_temp); cat /home/hagen/myperl/test/wordlist.out | grep $x`
+    words=`x=$(cat $_temp); cat  $HOME/myperl/test/wordlist.out | grep $x`
     result=`echo -n $words | tr "\t" "\n"`
     dialog --msgbox "\nYou entered:\n$result" 19 152
 }
 
-### Message Box sample - show versions
+### Message Box - show versions
 version() {
-    dialog --backtitle "Dialog - MessageBox sample" \
-           --msgbox "$PN - Version $VER\na Linux dialog Tutorial\n\nusing:\n$DVER" 9 52
+    dialog --backtitle "active-memory - MessageBox" \
+           --msgbox "$PN - Version $VER\na active-memory component\n\nsantex@cpan.org:\n$DVER" 9 52
 }
 
-### Text Box sample - show file test.txt
+### Text Box - show file test.txt
 textbox() {
-    filename="test.txt"
+    filename="$HOME/$NAME/config.txt"
     if [ -e $filename ]; then
-        dialog --backtitle "Dialog - TextBox sample - use [up] [down] to scroll"\
+        dialog --backtitle "active-memory - TextBox - use [up] [down] to scroll"\
                --begin 3 5 --title " viewing File: $filename "\
                --textbox $filename 20 70
     else
@@ -240,7 +269,7 @@ textbox() {
     fi
 }
 
-### Form Sample ###
+### Form ###
 formbox () {
     dialog --backtitle "...." \
         --form " Form Test - use [up] [down] to select input field " 21 70 18 \
@@ -257,14 +286,14 @@ formbox () {
            --msgbox "\nYou entered:\n$result" 12 52
 }
 
-### Text Box sample - show file test.txt
+### Text Box - show file test.txt
 tailbox() {
 
 
     dialog clear
     test
 
-    dialog --backtitle "active-data - v 0.01"\
+    dialog --backtitle "active-memory - v 0.01"\
            --begin 3 5 --title " viewing File: "$LOG" "\
            --tailbox $LOG 18 70
 }
@@ -276,39 +305,47 @@ main_menu() {
     dialog --backtitle "active-memory - AI microstructure's "$stop --title "- V. $VER "\
         --cancel-label "Quit" \
         --menu "Move using [UP] [DOWN], [Enter] to select" 17 60 10\
-        Editor "Change primary configuration!"\
-#        File "Show Dirctory & File selector"\
-        Form "Show a form"\
-        Home_Menu "Show files in \$HOME for selection"\
-        File_Menu "Word-menue in \$HOME for selection"\
-        Input "Show Box for typing a line"\
-        Gauge "Progress bar"\
+        Config "Change primary configuration!"\
         Multi "Multi select list"\
-        Radio "Single select list"\
         Show "Show file test.txt"\
         Tail "Watch /var/log/messages"\
         Version "Show program version info"\
         Quit "Exit demo program" 2>$_temp
+
+
+#       Driver "Multi select list"\
+ 
+#        Input "Show Box for typing a line"\
+#       Gauge "Progress bar"\
+#        Radio "Single select list"\
+#        File "Show Dirctory & File selector"\
+#        Form "Show a form"\
+ #       Home_Menu "Show files in \$HOME for selection"\
+  #      File_Menu "Word-menue in \$HOME for selection"\
+
 
     opt=${?}
     if [ $opt != 0 ]; then rm $_temp; exit; fi
     menuitem=`cat $_temp`
     echo "menu=$menuitem"
     case $menuitem in
-        Gauge) gauge;;
-     #   File) file_select;;
-        Home_Menu) file_menu;;
-        Word_Menu) word_menu;;
-        Input) inputbox;;
-        Editor) vi test.txt;;
+     Config) vim $CONFIG;;
         Multi) checklist;;
-        Radio) radiolist;;
         Show) textbox;;
         Tail) tailbox;;
         Version) version;;
-        Form) formbox;;
         Quit) rm $_temp; exit;;
-    esac
+        esac
+#     Driver) driverlist;;
+
+        #    Gauge) gauge;;
+        #   File) file_select;;
+        #  Home_Menu) file_menu;;
+        # Word_Menu) word_menu;;
+        #Input) inputbox;;
+        #Radio) radiolist;;
+        #Form) formbox;;
+       
 }
 
 while true; do

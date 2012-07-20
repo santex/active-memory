@@ -327,7 +327,7 @@ close($steem);
 END{
 
 
-`scp -r /var/www/sections/data/ root\@algoservice.com:/var/www/vhosts/quantup.com/httpdocs/sections/data/`;
+#`scp -r /var/www/sections/data/ root\@algoservice.com:/var/www/vhosts/quantup.com/httpdocs/sections/data/`;
 
 }
 

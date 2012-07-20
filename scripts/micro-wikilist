@@ -72,7 +72,7 @@ our $cache = {};
 our $memcache = AI::MicroStructure::Driver::Memcached->new;
 my $base = "http://en.wikipedia.org";
 my $from_cache = sprintf("%s_from_cache",$doc->{'user'});
-
+$ARGV[0]="List_of_software_categories";
 
 if(@ARGV){
 

@@ -1,9 +1,8 @@
-#!/usr/bin/perl	
+#!/usr/bin/perl
 use strict;
 use warnings;
 use AI::MicroStructure;
 use Getopt::Long;
-
 my $usage = << 'EOT';
 Usage: meta [ options ] theme [ count ]
 Available options:
