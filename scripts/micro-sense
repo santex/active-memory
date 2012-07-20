@@ -1,0 +1,101 @@
+#!/usr/bin/perl -w
+use Data::Dumper;
+use JSON;
+
+
+my $m = my $body = my $sense = my $name = my $type = my $entity = "";
+my $i = 0;
+# convert to lower case, translate ' ' to '_' and eliminate any
+# syntactic marker
+sub lower#
+{ 
+    my $word = shift;
+    $word =~ tr/A-Z /a-z_/;
+    $word =~ s/\(.*\)$//;
+    return $word;
+}
+
+# translate ' ' to '_'
+sub underscore#
+{ 
+    $_[0] =~ tr/ /_/;
+    return $_[0];
+}
+
+# Eliminate any syntactic marker
+sub delMarker#
+{ 
+    $_[0] =~ s/\(.*\)$//;
+    return $_[0];
+}
+
+
+sub trim
+{
+  my $string = shift;
+  $string =  "" unless  $string;
+  $string =~ s/^\s+//;
+  $string =~ s/\s+$//;
+  $string =~ s/\t//;
+  $string =~ s/^\s//;
+  return $string;
+}
+$body = "
+[/zero/]
+0
+[/zero/]
+[/zero/]
+0
+[/zero/]
+[/mask/]
+Perl Safe error
+[/mask/]
+[/Other division error/]
+1
+[/Other division error/]
+[/catch/]
+1
+[/catc/]
+";
+
+$m = `micro stars planets constellations` unless($#ARGV);
+$m = $ARGV[0];
+$m =~s/\n//g unless(!$m);
+$body="wn $m -synsn"  unless(!$m);
+
+exit(0) unless($m);
+
+
+my @found=();
+$body = `$body`;
+my @base;
+
+while($body =~ s{Sense(.*?)[,|\n|=|-](.*?)\n(.*?)[,|-|=]>(.*?)[\n]}{}x){
+
+ @base = ();
+ 
+ $sense   = trim($1); 
+ $name    = trim($2);
+ $type    = trim($3);
+ $entity  = trim($4);
+ 
+$base->{$sense}->{$i}=[] unless($sense eq '');
+ 
+push @{$base->{$sense}->{$i}},$name unless($name eq '');
+ 
+push @{$base->{$sense}->{$i}},$type unless($type eq '');
+ 
+push @{$base->{$sense}->{$i}},$entity unless($entity eq '');
+
+push  @found,$base->{$sense}->{$i};
+
+
+##$i++;
+}
+
+
+$utf8_encoded_json_text = encode_json({"rows"=>\@found});
+ 
+print $utf8_encoded_json_text;
+
+1;
