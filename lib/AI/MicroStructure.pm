@@ -373,7 +373,36 @@ sub save_cat {
 sub save_default {
 
 my $self = shift;
-my $dat;
+my $data = shift;
+my $line = shift;
+my $dat = {};
+my @in = ();
+my $active=0;
+foreach(@{$data->{rows}->{"coordinate"}}){
+  
+    if($_ eq $line){
+      
+       $active=1;
+       
+    }
+    
+    
+    if(1+$line eq $_){
+      
+       $active=0;
+       
+    }
+    
+    if($active==1){
+      push @in,$_;   
+    
+    }
+
+}
+#push @in,@{$data->{rows}->{"coordinate"}};
+$dat->{names} = join("  ",grep(/^[a-z]/,@in));
+#$dat->{names} =~ s/$line(.*?)\-\>(.*?) [1-9] /$1 $2/g;
+$dat->{names} =~ s/  / /g;
 my @file = grep{/$Theme/}map{File::Glob::bsd_glob( File::Spec->catfile( $_, qw( AI MicroStructure *.pm ) ) )}@INC;
 #  print Dumper [@ARGV,$data,$Theme,@file];
   
@@ -385,7 +414,7 @@ my @file = grep{/$Theme/}map{File::Glob::bsd_glob( File::Spec->catfile( $_, qw( 
   
   truncate(SELF,tell SELF);
     
-  print SELF $self->save_cat($data);
+  print SELF $self->save_cat($dat);
         
   truncate(SELF,tell SELF);
   close SELF;
@@ -424,12 +453,33 @@ while(<DATA>){
 return $data;
 }
 
+sub getBlank {
+  
+  my $self = shift;
+  my $theme = shift;
+
+
+my $usage = "";
+
+$usage = "#!/usr/bin/perl -W\npackage AI::MicroStructure::$theme;\n";
+$usage .= << 'EOT';
+use strict;
+use AI::MicroStructure::List;
+our @ISA = qw( AI::MicroStructure::List );
+__PACKAGE__->init();
+1;
+__DATA__
+# default
+EOT
+
+
+}
 
 sub save_new {
 
 my $self = shift;
 my $ThemeName = shift;
-my $dat;
+my $data = shift;
 
 $ThemeName = lc $self->trim(`micro`) unless($ThemeName);
 my @file = grep{/any/}map{File::Glob::bsd_glob( File::Spec->catfile( $_, qw( AI MicroStructure *.pm ) ) )}@INC;
@@ -449,15 +499,16 @@ my @file = grep{/any/}map{File::Glob::bsd_glob( File::Spec->catfile( $_, qw( AI 
 
   open($fh,">$file[1]") || die $!;
   
-#  print Dumper <SELF>;
-  print $fh $self->save_cat($data);
+  print $fh $self->getBlank($ThemeName);
+
         
 #  truncate(SELF,tell SELF);
   close $fh;
   }
- 
-  print Dumper $fh;
- 
+  $Theme = $ThemeName; #  print Dumper $fh;
+  push @INC,$file[1];
+
+  return 1;
 }
 
 
@@ -474,7 +525,7 @@ if($write || $new){
   use Term::ReadKey;
   use JSON; 
   
-  my $data = decode_json( `micro-sense $ThemeName`);
+  my $data = decode_json( `micro-sense $ThemeName words`);
   my $char;
   my $line;
   my $senses=@{$data->{"senses"}};
@@ -490,13 +541,16 @@ if($write || $new){
 
   if($line>0 && $line<=$senses){
 
-    $micro->save_new($ThemeName,$line,$data);
-    die "cool!!!!";
+    $micro->save_new($ThemeName,$data,$line);
+
+    $micro->save_default($data,$line);
+#    $micro->add_theme($Theme);
+    printf "\ncool!!!!";
     exit 0;
     
   }else{ 
     
-    die "your logic is today impaired !!!";
+    printf "your logic is today impaired !!!";
     exit 0;
     
   }

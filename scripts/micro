@@ -61,7 +61,7 @@ if($conf{"new"} and $ARGV[0] =~ m{^([^/]+)/(.*)}s) {
 
 
     my $meta = AI::MicroStructure->new( $theme, category => "new" );
-    exit;
+#    exit;
 }
 
 
@@ -86,7 +86,7 @@ my $module = "AI::MicroStructure::$theme";
 # load the remote theme if needed
 if ( $conf{remote} || $conf{check} || $conf{sources}) {
     eval "require $module;";
-    die "Theme '$theme' is not updatable!\n"
+    warn "Theme '$theme' is not updatable!\n"
         unless $module->has_remotelist();
 }
 

@@ -91,7 +91,7 @@ $line = $ARGV[0];
   
   }
     
-  chomp($line = <STDIN>) unless($line);
+   chomp($line = <STDIN>) unless($line);
   
    @set=();
    $wn = `wn $line -over -hypen -hypon -synsn -smemn -membn -subsn -meron -holon -derin -domnn -famln -coorn -hmern -grepn`;
@@ -120,7 +120,7 @@ $line = $ARGV[0];
 #print Dumper [split("sense",`wn $line  -coorn`)];
 push @{$data->{'search'}},grep{/[a-z|A-Z]/}split("\n",lc `wn $line -grepn`) unless(!$words);
 push @{$data->{'coordinate'}},map{$_=trim($_); @_=grep(/[A-Z]|[0-9]|[a-z]/,map{$_=trim($_)}split("\n|=>",$_))}split(/Sense/,`wn $line -coorn`) unless(!$words);
-#shift @{$data->{'coordinate'}} &&  @{$data->{'search'}};
+shift @{$data->{'coordinate'}} &&  shift @{$data->{'search'}} for(0..1);
 #@{$data->{'search'}};
 END{
  
