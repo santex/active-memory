@@ -3,35 +3,85 @@ use strict;
 use warnings;
 use AI::MicroStructure;
 use Getopt::Long;
+use Data::Dumper;
+
 my $usage = << 'EOT';
-Usage: meta [ options ] theme [ count ]
-Available options:
-  --help            : print this message and exit
-  --whitespace|--ws : return metasyntactical names separated by whitespace
-  --version         : print version information and exit
-  --themes          : print the list of themes and exit
-  --remote          : fetch the remote list (if available) and print it
-  --check           : fetch the remote list and print differences with current
-  --category <name> : category
-  --sources         : return the sources (if any) of the remote list
+
+                   .--'"""""--._
+                .-'  o\\b.\o._o.`-.
+             .-'.- )  \d888888888888b.
+            /.'   b  Y8888888888888888b.
+          .-'. 8888888888888888888888888b
+         / o888 Y Y8888888888888888888888b
+         / d888P/ /| Y"Y8888888888888888888b
+       J d8888/| Y .o._. "Y8888888888888Y" \
+       |d Y888b|obd88888bo. """Y88888Y' .od8
+       Fdd 8888888888888888888bo._'|| d88888|
+       Fd d 88\ Y8888Y "Y888888888b, d888888P
+       d-b 8888b Y88P'     """""Y888b8888P"|
+      J  8\88888888P    `m.        """""   |
+      || `8888888P'       "Ymm._          _J
+      |\\  Y8888P  '     .mmm.YM)     .mMF"'
+      | \\  Y888J     ' < (@)>.- `   /MFm. |
+      J   \  `YY           ""'   ::  MM @)>F
+       L  /)  88                  :  |  ""\|
+       | ( (   Yb .            '  .  |     L
+       \   bo  8b    .            .  J     |
+        \      "' .      .    .    .  L   F
+         o._.:.    .        .  \mm,__J/  /
+         Y8::'|.            /     `Y8P  J
+         `|'  J:   . .     '   .  .   | F
+          |    L          ' .    _:    |
+          |    `:        . .:oood8bdb. |        
+          F     `:.          "-._   `" F
+         /       `::.           """'  /
+        /         `::.          ""   /
+    _.-d(          `:::.            F
+ .-'.-888b.          `::::.     .  J
+'   Y888888b.          `::::::::::'
+    `Y88888888bo.        `::::::d
+     `"Y8888888888boo.._   `"dd88b.
+ . '     `"Y8888888888888bood8888P `-._
+             `"Y8888888888888888P      `-._
+          - .    ""Y88888888888P        ` .`-.
+     -  -   -   __.   ""Y8888P'             . `.
+              _           ""'                 . `.
+"""""""""""""""""""""""""""""""""""""""""""""""""
 EOT
 
 my %conf = ( whitespace => 0, category => '' );
-GetOptions( \%conf, "whitespace|ws!", "version", "themes", "help", "remote",
-                    "check", "category=s", "sources" )
-  or die $usage;
+GetOptions( \%conf, "whitespace|ws!", "version", "themes", "help", "remote","new",
+                    "check", "category=s", "sources" );
+
+my $theme;
+
+if($conf{"new"} and $ARGV[0] =~ m{^([^/]+)/(.*)}s) {
+    $theme          = $1;
+    $conf{category} = $2;
+
+
+    my $meta = AI::MicroStructure->new( $theme, category => "new" );
+    exit;
+}
+
 
 # find out the theme name
-my $theme = shift || $AI::MicroStructure::Theme;
+$theme = shift || $AI::MicroStructure::Theme;
+
 if (!length $conf{category} && $theme =~ m{^([^/]+)/(.*)}s) {
     $theme          = $1;
     $conf{category} = $2;
+
+
 }
-die "Theme '$theme' does not exist!\n"
+
+
+warn "Theme '$theme' does not exist!\n"
   . "Available themes: @{[ AI::MicroStructure->themes ]}\n"
   unless AI::MicroStructure->has_theme( $theme );
 
 my $module = "AI::MicroStructure::$theme";
+
 
 # load the remote theme if needed
 if ( $conf{remote} || $conf{check} || $conf{sources}) {
@@ -80,4 +130,10 @@ else {
     print join $sep, @local, @remote;
 }
 
-__END__
+
+
+END{
+#    print Dumper  [@ARGV,%conf];
+}
+
+
