@@ -223,3 +223,126 @@ on the bash
 
 
 The word prion
+
+
+
+
+```
+                   .--'"""""--.>_
+                .-'  o\\b.\o._o.`-.
+             .-'.- )  \d888888888888b.
+            /.'   b  Y8888888888888888b.
+          .-'. 8888888888888888888888888b
+         / o888 Y Y8888888888888888888888b
+         / d888P/ /| Y"Y8888888888888888888b
+       J d8888/| Y .o._. "Y8888888888888Y" \
+       |d Y888b|obd88888bo. """Y88888Y' .od8
+       Fdd 8888888888888888888bo._'|| d88888|
+       Fd d 88\ Y8888Y "Y888888888b, d888888P
+       d-b 8888b Y88P'     """""Y888b8888P"|
+      J  8\88888888P    `m.        """""   |
+      || `8888888P'       "Ymm._          _J
+      |\\  Y8888P  '     .mmm.YM)     .mMF"'
+      | \\  Y888J     ' < (@)>.- `   /MFm. |
+      J   \  `YY           ""'   ::  MM @)>F
+       L  /)  88                  :  |  ""\|
+       | ( (   Yb .            '  .  |     L
+       \   bo  8b    .            .  J     |     The word chaos
+        \      "' .      .    .    .  L   F      has 4 concept's
+         o._.:.    .        .  \mm,__J/  /       we need to find out the which one
+         Y8::'|.            /     `Y8P  J        to use for our new,
+         `|'  J:   . .     '   .  .   | F        micro-structure
+          |    L          ' .    _:    |         
+          |    `:        . .:oood8bdb. |         (1): a state of extreme confusion and disorder       
+          F     `:.          "-._   `" F         (2): the formless and disordered state of matter before the creation of the cosmos 
+         /       `::.           """'  /          (3): Greek mythology the most ancient of gods; the personification of the infinity of space preceding creation of the universe
+        /         `::.          ""   /           (4): physics a dynamical system that is extremely sensitive to its initial conditions
+    _.-d(          `:::.            F           
+ .-'.-888b.          `::::.     .  J            
+'   Y888888b.          `::::::::::'             
+    `Y88888888bo.        `::::::d               
+     `"Y8888888888boo.._   `"dd88b.             
+ . '     `"Y8888888888888bood8888P `-._          
+             `"Y8888888888888888P      `-._      
+          - .    ""Y88888888888P        ` .`-.
+     -  -   -   __.   ""Y8888P'             . `.
+              _           ""'                 . `.
+"""""""""""""""""""""""""""""""""""""""""""""""""
+
+
+
+
+  
+  Type: the number you choose 1..4
+  4 
+
+cool!!!!hagen@sante12:~/myperl/AI-MicroStructure-0.01$ sudo micro chaos new
+chaos
+Use of uninitialized value $_ in concatenation (.) or string at /usr/local/share/perl/5.14.2/AI/MicroStructure.pm line 639.
+Use of uninitialized value $_ in concatenation (.) or string at /usr/local/share/perl/5.14.2/AI/MicroStructure.pm line 639.
+
+                   .--'"""""--.>_
+                .-'  o\\b.\o._o.`-.
+             .-'.- )  \d888888888888b.
+            /.'   b  Y8888888888888888b.
+          .-'. 8888888888888888888888888b
+         / o888 Y Y8888888888888888888888b
+         / d888P/ /| Y"Y8888888888888888888b
+       J d8888/| Y .o._. "Y8888888888888Y" \
+       |d Y888b|obd88888bo. """Y88888Y' .od8
+       Fdd 8888888888888888888bo._'|| d88888|
+       Fd d 88\ Y8888Y "Y888888888b, d888888P
+       d-b 8888b Y88P'     """""Y888b8888P"|
+      J  8\88888888P    `m.        """""   |
+      || `8888888P'       "Ymm._          _J
+      |\\  Y8888P  '     .mmm.YM)     .mMF"'
+      | \\  Y888J     ' < (@)>.- `   /MFm. |
+      J   \  `YY           ""'   ::  MM @)>F
+       L  /)  88                  :  |  ""\|
+       | ( (   Yb .            '  .  |     L
+       \   bo  8b    .            .  J     |     The word chaos
+        \      "' .      .    .    .  L   F      has 4 concept's
+         o._.:.    .        .  \mm,__J/  /       we need to find out the which one
+         Y8::'|.            /     `Y8P  J        to use for our new,
+         `|'  J:   . .     '   .  .   | F        micro-structure
+          |    L          ' .    _:    |         
+          |    `:        . .:oood8bdb. |         (1): a state of extreme confusion and disorder       
+          F     `:.          "-._   `" F         (2): the formless and disordered state of matter before the creation of the cosmos 
+         /       `::.           """'  /          (3): Greek mythology the most ancient of gods; the personification of the infinity of space preceding creation of the universe
+        /         `::.          ""   /           (4): physics a dynamical system that is extremely sensitive to its initial conditions
+    _.-d(          `:::.            F           
+ .-'.-888b.          `::::.     .  J            
+'   Y888888b.          `::::::::::'             
+    `Y88888888bo.        `::::::d               
+     `"Y8888888888boo.._   `"dd88b.             
+ . '     `"Y8888888888888bood8888P `-._          
+             `"Y8888888888888888P      `-._      
+          - .    ""Y88888888888P        ` .`-.
+     -  -   -   __.   ""Y8888P'             . `.
+              _           ""'                 . `.
+"""""""""""""""""""""""""""""""""""""""""""""""""
+
+
+
+
+  
+  Type: the number you choose 1..4
+  1
+
+cool!!!!hagen@sante12:~/myperl/AI-MicroStructure-0.0micro chaos 
+hugger-mugger
+hagen@sante12:~/myperl/AI-MicroStructure-0.01$ sudo micro chaos 
+pandemonium,
+hagen@sante12:~/myperl/AI-MicroStructure-0.01$ sudo micro chaos 
+topsy-turvyness
+hagen@sante12:~/myperl/AI-MicroStructure-0.01$ sudo micro chaos 
+topsy-turvyness
+hagen@sante12:~/myperl/AI-MicroStructure-0.01$ sudo micro chaos 
+pandemonium,
+hagen@sante12:~/myperl/AI-MicroStructure-0.01$ sudo micro chaos 
+bedlam,
+hagen@sante12:~/myperl/AI-MicroStructure-0.01$ sudo micro chaos 
+bedlam,
+hagen@sante12:~/myperl/AI-MicroStructure-0.01$ sudo micro chaos 
+topsy-turvydom,
+```
