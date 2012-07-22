@@ -9,25 +9,15 @@ use AI::MicroStructure::WordBlacklist;
 
 my @set;
 my $data = {};
-my @questions;
 my %structure;
-#my $dbfile = "cache.conf";
-#tie (my %structure, "AnyDBM_File", $dbfile, O_CREAT|O_RDWR, 0600) or die "Can't open $dbfile: $!\n";
-#&create_new unless keys %structure;
-
-END{
-#untie %structure;
-}
-
-
 my $fresh=1;
-my $wn = my $response = my $ask = my $x = my $y = my $count = 0; my $found = 1;
+my $wn;
+my $debug = 0;
+my $words = 0;
+my $count = 0;
 
-
-my $m = my $body = my $sense = my $name = my $type = my $entity = "";
-my $i = my $debug = 0;
- 
 if( grep{/\bdebug\b/} @ARGV ){$debug = 1; cleanArgs("debug"); }; 
+if( grep{/\bwords\b/} @ARGV ){$words = 1; cleanArgs("words"); }; 
 
 
 sub cleanArgs{
@@ -92,7 +82,7 @@ my $line;
 my @xset;
 $line = $ARGV[0];
 
-while($count++ < 2) {
+#while($count++ < 2) {
   
   if($count==1 && !$line){
 
@@ -100,7 +90,7 @@ while($count++ < 2) {
     next;
   
   }
-  
+    
   chomp($line = <STDIN>) unless($line);
   
    @set=();
@@ -108,31 +98,39 @@ while($count++ < 2) {
    foreach(split("\n",$wn)){
     if($_ =~ /^([0-9].*?)[.](.*?)$/){
       my($sense,$text)=($1,$2);
-      my @set = [map{$_=~s/"|'|`//g; trim($_)}grep{/[a-z|A-Z]/}split("\\(|--|\\)|; \"",$text)];
-      push @{$data->{'senses'}->{$sense}},@set;
+      my @set = map{$_=~s/"|'|`//g; trim($_)}grep{/[a-z|A-Z]/}split("\\(|--|\\)|; \"",$text);
+      push @{$data->{'senses'}->{$sense}->{"basics"}},@set;
 
 
 
     }
   }
+    
   
+  #last if $line =~ /quit/;
   
-  last if $line =~ /quit/;
-  
-  next if $line =~ /^[a-z|A-Z]/i;
+  #next if $line =~ /^[a-z|A-Z]/i;
 
   
-  redo;
-}
+ # redo;
+#}
 
+
+#//map{$_=map{ trim($_)}split("=>",$_)unless($_=~/Coordinate Terms/)}
+#print Dumper [split("sense",`wn $line  -coorn`)];
+push @{$data->{'search'}},grep{/[a-z|A-Z]/}split("\n",lc `wn $line -grepn`) unless(!$words);
+push @{$data->{'coordinate'}},map{$_=trim($_); @_=grep(/[A-Z]|[0-9]|[a-z]/,map{$_=trim($_)}split("\n|=>",$_))}split(/Sense/,`wn $line -coorn`) unless(!$words);
+#shift @{$data->{'coordinate'}} &&  @{$data->{'search'}};
+#@{$data->{'search'}};
 END{
  
   if($debug == 1) { 
     print Dumper $data;
   }
     
-  my $utf8_encoded_json_text = encode_json({"rows"=>$data->{senses},
-                                            "senses"=>[sort keys %$data]});
+  my $utf8_encoded_json_text = encode_json({"rows"=>$data,
+                                            "senses"=>[sort keys %{$data->{'senses'}}],
+                                            });
    
   print $utf8_encoded_json_text;
 

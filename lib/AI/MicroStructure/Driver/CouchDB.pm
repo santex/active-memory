@@ -101,6 +101,52 @@ sub uri {
   return $self->{"uri"};
 }
 
+
+sub getAll {
+  my $self =shift;
+    
+  require LWP::UserAgent;
+  my $ua = LWP::UserAgent->new;
+  my $res = $ua->get(sprintf('%s/%s/_all_docs?reduce=false&include_docs=true',
+                              $self->{"uri"},
+                              $self->{"dbname"}));
+                              
+
+  return $res->content();
+
+}
+
+
+sub getLinks {
+  my $self =shift;
+    
+  require LWP::UserAgent;
+  my $ua = LWP::UserAgent->new;
+  my $res = $ua->get(sprintf('%s/%s/_design/base/_view/links?reduce=false&limit=10000&startkey="List"',
+                              $self->{"uri"},
+                              $self->{"dbname"}));
+
+  return $res->content();
+
+}
+
+sub getList {
+  my $self =shift;
+  my $arg =shift;
+  
+  require LWP::UserAgent;
+  my $ua = LWP::UserAgent->new;
+  my $res = $ua->get(sprintf('%s/%s/_design/base/_view/lists?start_key="%s"&end_key="%szzz"',
+                              $self->{"uri"},
+                              $self->{"dbname"},
+                              $arg,
+                              $arg));
+
+  return $res->content();
+
+}
+
 1;
 
-
+__DATA__
+http://localhost:5984/wikilist/_design/probe/_view/lists
