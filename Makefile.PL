@@ -6,7 +6,7 @@ WriteMakefile(
     NAME                => 'AI::MicroStructure',
     AUTHOR              => 'Hagen "santex" Geissler <santex@cpan.org>',
     VERSION_FROM        => 'lib/AI/MicroStructure.pm',
-    ABSTRACT_FROM       => 'lib/AI/MicroStructure.pm',
+    ABSTRACT_FROM       => 'lib/AI/MicroStructure/',
     PL_FILES            => {},
     PREREQ_PM => {
 'Test::More' => 0,
@@ -14,6 +14,7 @@ WriteMakefile(
 'List::Util' => 0,
 'JSON'=>0,
 'POE'=>0,
+'CouchDB::Client'=>0,
 'Getopt::Long'=>0,
 'Curses' => 0,
 'Search::ContextGraph' => 0,
@@ -26,6 +27,8 @@ WriteMakefile(
 'Cwd' => 0,
 'CGI'=>0,
 'Data::Freq'=>0,
+'Test::Simple' => 0.44,
+'JSON::Any' => 1.17,
 
     },
     EXE_FILES  => [
@@ -41,6 +44,7 @@ WriteMakefile(
 'scripts/micro-rename',
 'scripts/micro-tojson',
 'scripts/micro-wikilist',
+'scripts/micro-sense',
 'scripts/micro-wnwikilist',
 'scripts/am-try'
 ],
