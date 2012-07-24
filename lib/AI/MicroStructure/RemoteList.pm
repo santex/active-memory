@@ -93,10 +93,10 @@ sub remote_list {
 sub clean {
   my $str = shift;
      $str = AI::MicroStructure::RemoteList::tr_utf8_basic($str);
-     
+
      $str = AI::MicroStructure::RemoteList::tr_accent($str);
-     
-     
+
+
      return $str;
 
 }
@@ -139,12 +139,30 @@ my %utf2asc = (
     "\x{2640}"     => 'female',
     "\x{2642}"     => 'male',
 );
-my $utf_re = qr/(@{[join( '|', sort keys %utf2asc )]})/; 
+my $utf_re = qr/(@{[join( '|', sort keys %utf2asc )]})/;
 
 sub tr_utf8_basic {
     my $str = shift;
     $str =~ s/$utf_re/$utf2asc{$1}/go;
     return $str;
+}
+
+sub category { $_[0]->{category} }
+
+sub categories {
+    my $class = shift;
+    $class = ref $class if ref $class;
+
+    no strict 'refs';
+    return keys %{"$class\::MultiList"};
+}
+
+sub has_category {
+    my ($class, $category) = @_;
+    $class = ref $class if ref $class;
+
+    no strict 'refs';
+    return exists ${"$class\::MultiList"}{$category};
 }
 
 
