@@ -21,11 +21,7 @@ my @metas;
 my @urls;
 
 
- foreach ("http://algoservice.com:5984/test/_design/generic/_view/instancex?group=true",
-          "http://algoservice.com:5984/test/_design/generic/_view/query?=true",
-          "http://algoservice.com:5984/list-data/_design/basic/_view/all"
-        
-           )
+ foreach (())
  {
 
  $res = $ua->get($_);
@@ -78,7 +74,7 @@ for my $test (sort @metas) {
     my $items = $meta->name(0);
     $items{$_}++ for $meta->name(0);
 
-#    push @urls," http://algoservice.com:5984/list-data/_design/basic/_view/all?reduce=false&start_key=[%22*%22]&end_key=[%22$_%22]" for $meta->name(0);    
+#    push @urls,"http://algoservice.com:5984/wikilist/_design/base/_view/tags?reduce=false&start_key=[%22*%22]&end_key=[%22$_%22]" for $meta->name(0);    
     
     
 
@@ -104,7 +100,7 @@ for my $test (sort @metas) {
 
 
 
-@ARGV=("user","pass","localhost");
+@ARGV=("hagen","hagen123pass","algoservice.com");
 
 my $info = {};
 my @themesx;
@@ -327,7 +323,7 @@ close($steem);
 END{
 
 
-#`scp -r /var/www/sections/data/ root\@algoservice.com:/var/www/vhosts/quantup.com/httpdocs/sections/data/`;
+`scp -r /var/www/sections/data/ root\@algoservice.com:/var/www/vhosts/quantup.com/httpdocs/sections/data/`;
 
 }
 
@@ -386,14 +382,16 @@ out=`wordnet $x -hypen -hypon -synsn -smemn -subsn -partn`;  echo "@@@@@@@@@@@@@
 
 
 
-  for x in {0..10};
-  do
-  for i in `perl -MAI::MicroStructure -le 'print for AI::MicroStructure->themes;'`;
-  do
-  echo "@@@@@@@@@@@@@@@@@@@@@@@@"$i"@@@@@@@@@@@@@@@@@@@";
-  for n in `perl -MAI::MicroStructure -le 'print join " ", AI::MicroStructure->new(theme=>$i)->name;'`;
-  do
-  echo $n;
-  done;
-  done;
-  done;
+for x in {0..2};
+do
+echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
+for i in `perl -MAI::MicroStructure -le 'print for AI::MicroStructure->themes;'`;
+do
+
+for n in `perl -MAI::MicroStructure -le 'print join " ", AI::MicroStructure->new(theme=>$i)->name;'`;
+do
+echo $n;
+echo ">>"$i"<<";
+done;
+done;
+done;

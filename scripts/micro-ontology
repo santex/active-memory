@@ -1,0 +1,201 @@
+#!/usr/bin/perl -W
+use Data::Dumper;
+use JSON;
+use Digest::MD5 qw(md5 md5_hex md5_base64);
+
+
+my $add={};
+my $m = my $body = my $sense = my $name = my $type = my $entity = "";
+my $i = 0;
+# convert to lower case, translate ' ' to '_' and eliminate any
+# syntactic marker
+sub lower#
+{
+    my $word = shift;
+    $word =~ tr/A-Z /a-z_/;
+    $word =~ s/\(.*\)$//;
+    return $word;
+}
+
+# translate ' ' to '_'
+sub underscore#
+{
+    $_[0] =~ tr/ /_/;
+    return $_[0];
+}
+
+# Eliminate any syntactic marker
+sub delMarker#
+{
+    $_[0] =~ s/\(.*\)$//;
+    return $_[0];
+}
+
+
+sub trim
+{
+  my $string = shift;
+  if($string && $string =~ /of (verb|noun)/){
+#    return "";
+  }
+
+  $string =  "" unless  $string;
+  $string =~ s/^\s+//;
+  $string =~ s/\s+$//;
+  $string =~ s/\t//;
+  $string =~ s/^\s//;
+  $string =~ s/^->//;
+  $string =~ s/^=>//;
+
+  return $string;
+}
+$body = "
+[/zero/]
+0
+[/zero/]
+[/zero/]
+0
+[/zero/]
+[/mask/]
+Perl Safe error
+[/mask/]
+[/Other division error/]
+1
+[/Other division error/]
+[/catch/]
+1
+[/catc/]
+";
+
+$m = $ARGV[0];
+$m = `micro any` unless($m);
+$m =~s/\n//g unless(!$m);
+#print  Dumper `wn  hydra  -over -hypen -hypon -synsn -smemn -membn -subsn -meron -holon -derin -domnn -famln -coorn -hmern -grepn`;# unless(!$m);
+$body = "wn $m -over -hypen -hypon -synsn -smemn -membn -subsn -meron -holon -derin -domnn -famln -coorn -hmern -grepn" unless(!$m);
+exit(0) unless($m);
+
+
+my @found=();
+$body = `$body`;
+my @base;
+$add = {};
+my ($more0,$more1,$more2,$more3,$more4,$more5,$more6,$more7);
+my $string;
+while($body =~ s{Sense*(.*?)\n(.*?)\n(.*?)\n(.*?)\n(.*?)\n(.*?)\n(.*?)\n(.*?)\n(.*?)}{}x){
+
+
+ @base = ();
+
+ $sense   = trim($1);
+ $name    = trim($2);
+ $type    = trim($3);
+ $entity  = trim($4);
+
+ $more0    = trim($5);
+ $more1    = trim($6);
+
+ $more2    = trim($7);
+ $more3    = trim($8);
+
+
+ $more4    = trim($9);
+ $more5    = trim($10);
+
+ $more6    = trim($11);
+ $more7    = trim($12);
+
+ $string = sprintf "\n%s#%s#%s#%s#%s#%s#%s#%s#%s#%s#%s#%s#", $sense,$name,$type,$entity,$more0,$more1,$more2,$more3,$more4,$more5,$more6,$more7;
+ $test = $string;
+ #push @{$add->{$sense}->{stringy}},$string;
+ while($test =~ s{([A-Z][A-Z].*?) (.*?)\#}{}x){
+
+  push @{$add->{$sense}},trim($1).trim($2);
+
+ }
+
+#print $string;
+$base->{$sense}->{$i}=[] unless($sense eq '');
+
+push @{$base->{$sense}->{$i}},$name unless($name eq '');
+
+push @{$base->{$sense}->{$i}},$type unless($type eq '');
+
+push @{$base->{$sense}->{$i}},$entity unless($entity eq '');
+
+push  @found,$base->{$sense}->{$i};
+
+
+$i++;
+}
+
+my $data = {"rows"=>\@found,"parts"=>$add,"ontology"=>importOntology($add)};
+my $utf8_encoded_json_text = encode_json($data);
+
+sub importOntology {
+
+  my $ontology = {};
+
+  foreach(keys %$add){
+
+#push @{$ontology->{$_}[0]}, grep{/HAS INSTANCE/}@{$add->{$_}} unless !grep{/HAS\ INSTANCE/}@{$add->{$_}};
+#push @{$ontology->{$_}[1]}, grep{/TOPIC/}@{$add->{$_}} unless !grep{/TOPIC/}@{$add->{$_}};
+#push @{$ontology->{$_}[2]}, grep{/RELATED\ TO/}@{$add->{$_}} unless !grep{/RELATED\ TO/}@{$add->{$_}};
+#push @{$ontology->{$_}[3]}, grep{/INSTANCE\ OF/}@{$add->{$_}} unless !grep{/INSTANCE\ OF/}@{$add->{$_}};
+#push @{$ontology->{$_}[4]}, grep{/HAS\ PART/}@{$add->{$_}} unless !grep{/HAS\ PART/}@{$add->{$_}};
+#push @{$ontology->{$_}[5]}, grep{/MEMBER\ OF/}@{$add->{$_}} unless !grep{/MEMBER\ OF/}@{$add->{$_}};
+#push @{$ontology->{$_}[6]}, grep{/HAS\ MEMBER/}@{$add->{$_}} unless !grep{/HAS\ MEMBER/}@{$add->{$_}};
+
+#push @{$ontology->{$_}},sort grep{/[A-Z]/}@{$add->{$_}};# unless 1;# !grep{//}@{$add->{$_}};
+$ontology->{counts}->{$_}= [map{$_= $_;}grep{/[A-Z]/}@{$add->{$_}}];
+  }
+
+  return $ontology;
+}
+
+
+
+
+sub importOntology2 {
+  my $add = shift;
+  my $ontology = {};
+  my @sets = <DATA>;
+  my $ix = 0;
+  foreach my $sense (keys %$add){
+
+ #   print $_;
+    #foreach my $cmd (@sets){
+#print $cmd;
+    my $tmp={};
+    push @{$ontology->{$sense}},grep{join("|",@sets)}@{$add->{$sense}};
+
+    my $i=0;
+    foreach(@{$ontology->{$sense}}){
+
+        $tmp->{$_}=$i++;
+
+    }
+    $ix+=$i;
+    @{$ontology->{$sense}} = [sort keys $tmp,$i];
+  }
+
+  #}
+  $ontology->{count}=$ix;
+
+  return $ontology;
+}
+#foreach(values %$ontology){
+   #printf("\n%s ",$_,$#{{$ontology->{$_}}});
+#}
+print Dumper importOntology($add),"Search=$m";
+print Dumper importOntology2($add),"Search=$m";
+__DATA__
+HAS INSTANCE
+TOPIC
+RELATED TO
+INSTANCE OF
+HAS PART
+MEMBER OF
+HAS MEMBER
+USAGE
+HAS SUBSTANCE
+PART OF

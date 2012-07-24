@@ -5,53 +5,31 @@ use AI::MicroStructure;
 use Getopt::Long;
 use Data::Dumper;
 
-my $usage = << 'EOT';
 
-                   .--'"""""--._
-                .-'  o\\b.\o._o.`-.
-             .-'.- )  \d888888888888b.
-            /.'   b  Y8888888888888888b.
-          .-'. 8888888888888888888888888b
-         / o888 Y Y8888888888888888888888b
-         / d888P/ /| Y"Y8888888888888888888b
-       J d8888/| Y .o._. "Y8888888888888Y" \
-       |d Y888b|obd88888bo. """Y88888Y' .od8
-       Fdd 8888888888888888888bo._'|| d88888|
-       Fd d 88\ Y8888Y "Y888888888b, d888888P
-       d-b 8888b Y88P'     """""Y888b8888P"|
-      J  8\88888888P    `m.        """""   |
-      || `8888888P'       "Ymm._          _J
-      |\\  Y8888P  '     .mmm.YM)     .mMF"'
-      | \\  Y888J     ' < (@)>.- `   /MFm. |
-      J   \  `YY           ""'   ::  MM @)>F
-       L  /)  88                  :  |  ""\|
-       | ( (   Yb .            '  .  |     L
-       \   bo  8b    .            .  J     |
-        \      "' .      .    .    .  L   F
-         o._.:.    .        .  \mm,__J/  /
-         Y8::'|.            /     `Y8P  J
-         `|'  J:   . .     '   .  .   | F
-          |    L          ' .    _:    |
-          |    `:        . .:oood8bdb. |        
-          F     `:.          "-._   `" F
-         /       `::.           """'  /
-        /         `::.          ""   /
-    _.-d(          `:::.            F
- .-'.-888b.          `::::.     .  J
-'   Y888888b.          `::::::::::'
-    `Y88888888bo.        `::::::d
-     `"Y8888888888boo.._   `"dd88b.
- . '     `"Y8888888888888bood8888P `-._
-             `"Y8888888888888888P      `-._
-          - .    ""Y88888888888P        ` .`-.
-     -  -   -   __.   ""Y8888P'             . `.
-              _           ""'                 . `.
-"""""""""""""""""""""""""""""""""""""""""""""""""
+our ($new,$debug, $write,$drop) =(0,0,0,0); 
+
+if( grep{/\bnew\b/} @ARGV ){ $new = 1; cleanArgs("new"); }
+if( grep{/\bdebug\b/} @ARGV ){$debug = 1; cleanArgs("debug"); }; 
+if( grep{/\bwrite\b/} @ARGV ){ $write = 1; cleanArgs("write");  }; 
+if( grep{/\bdrop\b/} @ARGV ){ $write = 1; cleanArgs("drop");  }; 
+
+
+
+sub cleanArgs{
+    my ($key) = @_; 
+    my @tmp=();
+    foreach(@ARGV){ 
+    push @tmp,$_ unless($_=~/$key/);}
+    
+    @ARGV=@tmp;
+}
+
+my $usage = << 'EOT';
 EOT
 
-my %conf = ( whitespace => 0, category => '' );
-GetOptions( \%conf, "whitespace|ws!", "version", "themes", "help", "remote","new",
-                    "check", "category=s", "sources" );
+my %conf = ( );
+GetOptions( \%conf, "whitespace|ws!", "version","themes", "help", "remote","new",
+                    "check", "category=s", "sources" ,"drop");
 
 my $theme;
 
@@ -59,10 +37,21 @@ if($conf{"new"} and $ARGV[0] =~ m{^([^/]+)/(.*)}s) {
     $theme          = $1;
     $conf{category} = $2;
 
-
     my $meta = AI::MicroStructure->new( $theme, category => "new" );
-#    exit;
+    exit;
 }
+
+
+if($conf{"new"} and $ARGV[0] =~ m{^([^/]+)/(.*)}s) {
+    $theme          = $1;
+    $conf{category} = $2;
+
+    my $meta = AI::MicroStructure->new( $theme, category => "drop" );
+    exit;
+}
+
+if(!$conf{"drop"} && !$conf{"write"}){
+
 
 
 # find out the theme name
@@ -76,7 +65,7 @@ if (!length $conf{category} && $theme =~ m{^([^/]+)/(.*)}s) {
 }
 
 
-warn "Theme '$theme' does not exist!\n"
+die "Theme '$theme' does not exist!\n"
   . "Available themes: @{[ AI::MicroStructure->themes ]}\n"
   unless AI::MicroStructure->has_theme( $theme );
 
@@ -86,7 +75,7 @@ my $module = "AI::MicroStructure::$theme";
 # load the remote theme if needed
 if ( $conf{remote} || $conf{check} || $conf{sources}) {
     eval "require $module;";
-    warn "Theme '$theme' is not updatable!\n"
+    die "Theme '$theme' is not updatable!\n"
         unless $module->has_remotelist();
 }
 
@@ -130,10 +119,10 @@ else {
     print join $sep, @local, @remote;
 }
 
-
+}
 
 END{
-#    print Dumper  [@ARGV,%conf];
+#    print Dumper  [$theme,@ARGV,%conf];
 }
 
 
