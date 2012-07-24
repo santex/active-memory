@@ -22,20 +22,22 @@ our $item="";
 our @items;
 our @a=();
 
-our ($new,$debug, $write) =(0,0,0); 
- 
+our ($new,$debug, $write,$drop) =(0,0,0,0);
+
 if( grep{/\bnew\b/} @ARGV ){ $new = 1; cleanArgs("new"); }
-if( grep{/\bdebug\b/} @ARGV ){$debug = 1; cleanArgs("debug"); }; 
-if( grep{/\bwrite\b/} @ARGV ){ $write = 1; cleanArgs("write");  }; 
+if( grep{/\bdebug\b/} @ARGV ){$debug = 1; cleanArgs("debug"); };
+if( grep{/\bwrite\b/} @ARGV ){ $write = 1; cleanArgs("write");  };
+if( grep{/\bdrop\b/} @ARGV ){ $drop = 1; cleanArgs("drop");  };
+
 
 our $ThemeName = $ARGV[0]; # default theme
 
 sub cleanArgs{
-    my ($key) = @_; 
+    my ($key) = @_;
     my @tmp=();
-    foreach(@ARGV){ 
+    foreach(@ARGV){
     push @tmp,$_ unless($_=~/$key/);}
-    
+
     @ARGV=@tmp;
 }
 # private class method
@@ -45,10 +47,10 @@ sub find_themes {
               grep { $_->[0] !~ /^([A-Z]|foo|new)/ }    # remove the non-theme subclasses
               map  { [ ( fileparse( $_, qr/\.pm$/ ) )[0] => $_ ] }
               map  { File::Glob::bsd_glob( File::Spec->catfile( $_, qw( AI MicroStructure *.pm ) ) ) } @dirs];
-              
+
       $ALIEN{"store"}=[];
-      
-      
+
+
       return @{$ALIEN{"base"}};
 }
 
@@ -78,13 +80,13 @@ sub find_modules {
 $MICRO{$_} = 0 for keys %{{__PACKAGE__->find_themes(@INC)} };
 $MODS{$_} = $_ for keys %{{__PACKAGE__->find_modules(@INC)} };
 $search = join("|",keys %MICRO);
-#if( grep{/$search/} @ARGV ){ $Theme = $ARGV[0] unless(!$ARGV[0]); } 
- 
+#if( grep{/$search/} @ARGV ){ $Theme = $ARGV[0] unless(!$ARGV[0]); }
+
 # fetch the list of standard themes
 
 #print Dumper keys %MICRO;
 sub getComponents(){
-  
+
   my $x= sprintf("%s",Dumper keys %MICRO);
 
   return $x;
@@ -212,11 +214,11 @@ sub load_data {
         $$_ =~ s/\s*\z//;
         $$_ =~ s/\s+/ /g;
     }
-    
+
     if($debug) {
       print Dumper $data;
     }
-    
+
     return $data;
 }
 
@@ -347,94 +349,105 @@ sub save_cat {
 
   my $self = shift;
   my $data = shift;
-  my $dat;  
+  my $dat;
   my $ret = "";
 
-  
+
   foreach my $key(sort keys %{$data} ) {
       next unless($_);
       #ref $hash->{$_} eq "HASH"
       if(ref $data->{$key} eq "HASH"){
-        $ret .= "\n".$self->save_cat($data->{$key});     
+        $ret .= "\n".$self->save_cat($data->{$key});
       }else{
         $dat = $data->{$key};
-        $dat =~ s/ /\n /g;
-        
-        $ret .= "# ".($key=~/names|default/?$key:"names ".$key);
+        $dat =~ s/ /\n/g;
+        $dat =~ s/\n\n/\n/g;
+        $dat =~ s/->\n|[0-9]\n//g;
+
+        $ret .= "# ".($key=~/names|default|[0-9]/?$key:"names ".$key);
         $ret .= "\n ".$dat."\n";
       }
-  
+
   }
-  
+
   return $ret;
 
 }
 
 sub save_default {
 
-my $self = shift;
-my $data = shift;
-my $line = shift;
-my $dat = {};
-my @in = ();
-my $active=0;
-foreach(@{$data->{rows}->{"coordinate"}}){
-  
-    if($_ eq $line){
-      
-       $active=1;
-       
-    }
-    
-    
-    if(1+$line eq $_){
-      
-       $active=0;
-       
-    }
-    
+  my $self = shift;
+  my $data = shift;
+  my $line = shift;
+  my $dat = {};
+  my @in = ();
+  my $active=0;
+  $line = $Theme unless($line);
+
+  foreach(@{$data->{rows}->{"coordinate"}}){
+
+    if($_ eq $line){ $active=1; }
+
+    if(1+$line eq $_){ $active=0; }
+
     if($active==1){
-      push @in,$_;   
-    
+      $_=~s/,//g;
+      $_ = $self->trim($_);
+      $dat->{names}->{$_}=$_ unless(defined($dat->{names}->{$_}));
     }
 
 }
-#push @in,@{$data->{rows}->{"coordinate"}};
-$dat->{names} = join("  ",grep(/^[a-z]/,@in));
-#$dat->{names} =~ s/$line(.*?)\-\>(.*?) [1-9] /$1 $2/g;
+
+foreach(@{$data->{rows}->{"search"}}){
+
+    if($_ eq $line){  $active=1; }
+
+
+    if(1+$line eq $_){ $active=0; }
+
+    if($active==1){
+      $_=~s/,//g;
+      $_ = $self->trim($_);
+      $dat->{names}->{$_}=$_ unless(defined($dat->{names}->{$_}));
+    }
+
+}
+
+@in = values %{$dat->{names}};
+$dat->{names} = join(" ",@in);
+$dat->{names} =~ s/$line(.*?)\-\>(.*?) [1-9] /$1 $2/g;
 $dat->{names} =~ s/  / /g;
 my @file = grep{/$Theme/}map{File::Glob::bsd_glob( File::Spec->catfile( $_, qw( AI MicroStructure *.pm ) ) )}@INC;
-#  print Dumper [@ARGV,$data,$Theme,@file];
-  
+
+
   if(@file){
   open(SELF,"+<$file[0]") || die $!;
-  
-#  print Dumper <SELF>;
+
   while(<SELF>){last if /^__DATA__/}
-  
-  truncate(SELF,tell SELF);
-    
-  print SELF $self->save_cat($dat);
-        
-  truncate(SELF,tell SELF);
-  close SELF;
+
+    truncate(SELF,tell SELF);
+
+    print SELF $self->save_cat($dat);
+
+    truncate(SELF,tell SELF);
+    close SELF;
   }
- 
+
 }
 sub openData{
 
 my $self = shift;
 while(<DATA>){
-  chomp; 
+  chomp;
   if($_=~/^#\s*(\w+.*)$/) {
       @a=split(" ",$1);
-      if($#a){ 
-            $data->{$a[0]}->{$a[1]}="";        
+      if($#a){
+            $data->{$a[0]}->{$a[1]}="";
       }else{
             $data->{$1}="";
       }
       $item=$1 unless($#a);
-      
+
   }else{
 
       my @keys = split m!\s+|\s*/\s*!,$_;
@@ -445,7 +458,7 @@ while(<DATA>){
         $data->{$item} .= " $_" unless($_ eq "");
         }
       }
-          
+
   };
 
 }
@@ -454,7 +467,7 @@ return $data;
 }
 
 sub getBlank {
-  
+
   my $self = shift;
   my $theme = shift;
 
@@ -485,27 +498,17 @@ $ThemeName = lc $self->trim(`micro`) unless($ThemeName);
 my @file = grep{/any/}map{File::Glob::bsd_glob( File::Spec->catfile( $_, qw( AI MicroStructure *.pm ) ) )}@INC;
   my $fh;
   if(@file){
-#   $ThemeName = "any" unless($ThemeName);
    $file[1]=$file[0];
    $ThemeName = lc $ThemeName;
   $file[1] =~ s/any/$ThemeName/g;
-#  print Dumper @ARGV,[$data,$Theme,@file];
-
-
-
-
-#  open(my $fh1,"$file[0]") || die $!;
-  
 
   open($fh,">$file[1]") || die $!;
-  
+
   print $fh $self->getBlank($ThemeName);
 
-        
-#  truncate(SELF,tell SELF);
   close $fh;
   }
-  $Theme = $ThemeName; #  print Dumper $fh;
+  $Theme = $ThemeName;
   push @INC,$file[1];
 
   return 1;
@@ -513,25 +516,46 @@ my @file = grep{/any/}map{File::Glob::bsd_glob( File::Spec->catfile( $_, qw( AI 
 
 
 
+sub drop {
+
+my $self = shift;
+my $ThemeName = shift;
+
+my @file = grep{/$ThemeName/}map{File::Glob::bsd_glob( File::Spec->catfile( $_, qw( AI MicroStructure *.pm ) ) )}@INC;
+my $fh = shift @file;
+
+  `rm $fh`;
+
+  #push @INC,$file[1];
+
+  return 1;
+}
+
+
 
 
 END{
 
 
+if($drop == 1) {
 
-if($write || $new){
+   $micro->drop($ThemeName);
 
-  
+}
+
+if($new==1){
+
+
   use Term::ReadKey;
-  use JSON; 
-  
+  use JSON;
+
   my $data = decode_json( `micro-sense $ThemeName words`);
   my $char;
   my $line;
   my $senses=@{$data->{"senses"}};
      $senses= 0 unless($senses);
-     
-       
+
+
   printf("%s\n
   \033[0;34m
   Type: the number you choose 1..$senses
@@ -545,81 +569,83 @@ if($write || $new){
 
     $micro->save_default($data,$line);
 #    $micro->add_theme($Theme);
-    printf "\ncool!!!!";
+    printf "\ncool!!!!\n";
     exit 0;
-    
-  }else{ 
-    
-    printf "your logic is today impaired !!!";
+
+  }else{
+
+    printf "your logic is today impaired !!!\n";
     exit 0;
-    
+
   }
 
 
-  $micro->save_default() unless(!$write);
-
+  $micro->save_default();
   }
+
+  if($write == 1) {
+     $micro->save_default();
+  }
+
+
+#
+
 }
 
 
 sub usage {
 
  my $self = shift;
- 
- 
+
+
  my $search = shift;
  my $senseNr = shift;
  my $data = shift;
- 
+
 
 my $usage = << 'EOT';
 
-                   .--'"""""--.>_
-                .-'  o\\b.\o._o.`-.
-             .-'.- )  \d888888888888b.
-            /.'   b  Y8888888888888888b.
-          .-'. 8888888888888888888888888b
-         / o888 Y Y8888888888888888888888b
-         / d888P/ /| Y"Y8888888888888888888b
-       J d8888/| Y .o._. "Y8888888888888Y" \
-       |d Y888b|obd88888bo. """Y88888Y' .od8
-       Fdd 8888888888888888888bo._'|| d88888|
-       Fd d 88\ Y8888Y "Y888888888b, d888888P
-       d-b 8888b Y88P'     """""Y888b8888P"|
-      J  8\88888888P    `m.        """""   |
-      || `8888888P'       "Ymm._          _J
-      |\\  Y8888P  '     .mmm.YM)     .mMF"'
-      | \\  Y888J     ' < (@)>.- `   /MFm. |
-      J   \  `YY           ""'   ::  MM @)>F
-       L  /)  88                  :  |  ""\|
-       | ( (   Yb .            '  .  |     L
-       \   bo  8b    .            .  J     |     <0>_
-        \      "' .      .    .    .  L   F      <1>_
-         o._.:.    .        .  \mm,__J/  /       <2>_
-         Y8::'|.            /     `Y8P  J        <3>_
-         `|'  J:   . .     '   .  .   | F        <4>_
-          |    L          ' .    _:    |         <5>_
-          |    `:        . .:oood8bdb. |         1>_      
-          F     `:.          "-._   `" F         2>_
-         /       `::.           """'  /          3>_
-        /         `::.          ""   /           4>_
-    _.-d(          `:::.            F            5>_
- .-'.-888b.          `::::.     .  J             6>_
-'   Y888888b.          `::::::::::'              7>_
-    `Y88888888bo.        `::::::d                8>_
-     `"Y8888888888boo.._   `"dd88b.              9>_
- . '     `"Y8888888888888bood8888P `-._          
-             `"Y8888888888888888P      `-._      
-          - .    ""Y88888888888P        ` .`-.
-     -  -   -   __.   ""Y8888P'             . `.
-              _           ""'                 . `.
-"""""""""""""""""""""""""""""""""""""""""""""""""
+               .--'"""""--.>_
+            .-'  o\\b.\o._o.`-.
+         .-'.- )  \d888888888888b.
+        /.'   b  Y8888888888888888b.
+      .-'. 8888888888888888888888888b
+     / o888 Y Y8888888888888888888888b
+     / d888P/ /| Y"Y8888888888888888888b
+   J d8888/| Y .o._. "Y8888888888888Y" \
+   |d Y888b|obd88888bo. """Y88888Y' .od8
+   Fdd 8888888888888888888bo._'|| d88888|
+   Fd d 88\ Y8888Y "Y888888888b, d888888P
+   d-b 8888b Y88P'     """""Y888b8888P"|
+  J  8\88888888P    `m.        """""   |
+  || `8888888P'       "Ymm._          _J
+  |\\  Y8888P  '     .mmm.YM)     .mMF"'
+  | \\  Y888J     ' < (@)>.- `   /MFm. |
+  J   \  `YY           ""'   ::  MM @)>F
+   L  /)  88                  :  |  ""\|
+   | ( (   Yb .            '  .  |     L
+   \   bo  8b    .            .  J     |        <0>_
+    \      "' .      .    .    .  L   F         <1>_
+     o._.:.    .        .  \mm,__J/  /          <2>_
+     Y8::'|.            /     `Y8P  J           <3>_
+     `|'  J:   . .     '   .  .   | F           <4>_
+      |    L          ' .    _:    |            <5>_
+      |    `:        . .:oood8bdb. |            1>_
+      F     `:.          "-._   `" F            2>_
+     /       `::.           """'  /             3>_
+    /         `::.          ""   /              4>_
+_.-d(          `:::.            F               5>_
+-888b.          `::::.     .  J                 6>_
+Y888888b.          `::::::::::'                 7>_
+Y88888888bo.        `::::::d                    8>_
+`"Y8888888888boo.._   `"dd88b.                  9>_
 
+"""""""""""""""""""""""""""""""""""""""""""""""
 
 EOT
 
 
-$usage =~ s/<0>_/The word $search/g; 
+$usage =~ s/<0>_/The word $search/g;
 $usage =~ s/<1>_/has $senseNr concept's/g;
 $usage =~ s/<2>_/we need to find out the which one/g;
 $usage =~ s/<3>_/to use for our new,/g;
@@ -638,18 +664,25 @@ foreach my $sensnrx (sort keys %{$data->{"rows"}->{"senses"}})
      foreach(@{$row->{"basics"}}[1..2]){
       $txt .= " $_";
     }
-    $usage =~ s/$sensnrx>_/($sensnrx):$txt/g;  
-}  
+    $usage =~ s/$sensnrx>_/($sensnrx):$txt/g;
+}
 
   foreach my $ii (0..16){
-  $usage =~ s/ $ii>_//g;
+    $usage =~ s/ $ii>_//g;
   }
-   
-   
+
+
 return $usage;
 }
 
 1;
 
 __DATA__
-1mz
+count=0;
+for i in `perl -MAI::MicroStructure -le 'print  for AI::MicroStructure->themes';`; do
+echo "@@@@@@@@@@<SET>@@@@@@@@@@@@<"$count">@@@@@@@@@<"$i">@@@@@@@@@";
+count=$(expr $count + 1);
+perl -MAI::MicroStructure::$i  -le '$m=AI::MicroStructure::'$i'; print join(",", $m->name(scalar $m));';
+perl -MAI::MicroStructure::$i  -le '$m=AI::MicroStructure::'$i'; print join(",",$m->name(scalar $m));
+print join(",",$m->categories());';
+done
