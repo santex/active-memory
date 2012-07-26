@@ -3,6 +3,8 @@ package AI::MicroStructure;
 use strict;
 use warnings;
 use Carp;
+use Digest::MD5 qw(md5 md5_hex md5_base64);
+
 use File::Basename;
 use File::Spec;
 use File::Glob;
@@ -360,11 +362,11 @@ sub save_cat {
         $ret .= "\n".$self->save_cat($data->{$key});
       }else{
         $dat = $data->{$key};
-        $dat =~ s/ /\n/g;
+        $dat =~ s/^|,/\n/g;
         $dat =~ s/\n\n/\n/g;
         $dat =~ s/->\n|[0-9]\n//g;
 
-        $ret .= "# ".($key=~/names|default|[0-9]/?$key:"names ".$key);
+        $ret .= "# ".($key=~/names|default|[a-z]/?$key:"names ".$key);
         $ret .= "\n ".$dat."\n";
       }
 
@@ -409,11 +411,14 @@ foreach(@{$data->{rows}->{"search"}}){
       $_=~s/,//g;
       $_ = $self->trim($_);
       $dat->{names}->{$_}=$_ unless(defined($dat->{names}->{$_}));
+
+
     }
 
 }
 
-@in = values %{$dat->{names}};
+push @in , keys %{$dat->{names}};
+push @in , values %{$data->{names}};
 $dat->{names} = join(" ",@in);
 $dat->{names} =~ s/$line(.*?)\-\>(.*?) [1-9] /$1 $2/g;
 $dat->{names} =~ s/  / /g;
@@ -470,6 +475,8 @@ sub getBlank {
 
   my $self = shift;
   my $theme = shift;
+  my $data = shift;
+
 
 
 my $usage = "";
@@ -481,9 +488,33 @@ use AI::MicroStructure::List;
 our @ISA = qw( AI::MicroStructure::List );
 __PACKAGE__->init();
 1;
-__DATA__
-# default
 EOT
+
+my $new = {};
+foreach my $k (grep{!/^[0-9]/}map{$_=$self->trim($_)}@{$data->{rows}->{"search"}}){
+  
+    $k =~ s/[ ]/_/g; 
+    
+    $new->{$k}=[map{$_=[map{$_=$self->trim($_)}split("\n|, ",$_)]}grep{!/Hyponyms/}split("sense~~~~~~~~~",lc `micro-wnet $k`)];
+    next unless(@{$new->{$k}});
+#    $new->{$k}=~s/Sense*\n(.*?)\n\n/$1/g;
+#    @{$new->{$k}} = [split("\n|,",$new->{$k})];
+     $data->{rows}->{"ident"}->{md5_base64($new->{$k})} = $new->{$k};
+  
+}
+
+
+my $list = join("\n",sort keys %$new);
+
+
+#   $list =~ s/_//g; 
+
+$usage .= "
+__DATA__
+# names
+".$list;
+
+
 
 
 }
@@ -493,6 +524,7 @@ sub save_new {
 my $self = shift;
 my $ThemeName = shift;
 my $data = shift;
+
 
 $ThemeName = lc $self->trim(`micro`) unless($ThemeName);
 my @file = grep{/any/}map{File::Glob::bsd_glob( File::Spec->catfile( $_, qw( AI MicroStructure *.pm ) ) )}@INC;
@@ -504,7 +536,7 @@ my @file = grep{/any/}map{File::Glob::bsd_glob( File::Spec->catfile( $_, qw( AI 
 
   open($fh,">$file[1]") || die $!;
 
-  print $fh $self->getBlank($ThemeName);
+  print $fh $self->getBlank($ThemeName,$data);
 
   close $fh;
   }
@@ -549,29 +581,42 @@ if($new==1){
   use Term::ReadKey;
   use JSON;
 
-  my $data = decode_json( `micro-sense $ThemeName words`);
+  my $data = decode_json(lc`micro-sense $ThemeName words`);
   my $char;
   my $line;
   my $senses=@{$data->{"senses"}};
      $senses= 0 unless($senses);
 
-
-  printf("%s\n
+  printf("\n
   \033[0;34m
+  %s
   Type: the number you choose 1..$senses
   \033[0m",$micro->usage($ThemeName,$senses,$data));
 
   chomp($line = <STDIN>) unless($line);
 
+  my $d = join("#",@{$data->{rows}->{search}});
+  
+  my  @d = grep{/^$line#/}split("sense~~~~~~~~~",$d);
+  @{$data->{rows}->{"search"}}=split("#",join("",@d));
+
+
+#print Dumper @{$data->{rows}->{"search"}};
+
+
+
   if($line>0 && $line<=$senses){
-
     $micro->save_new($ThemeName,$data,$line);
+#    die();  
 
-    $micro->save_default($data,$line);
-#    $micro->add_theme($Theme);
-    printf "\ncool!!!!\n";
+#    print Dumper @{$data->{rows}->{"search"}};
+    #
+
+#    my @ontology = decode_json(`micro-ontology $ThemeName $line`);
+
+ #   $micro->save_default($data,$line);
+    printf Dumper "\ncool!!!!\n";
     exit 0;
-
   }else{
 
     printf "your logic is today impaired !!!\n";
@@ -580,11 +625,11 @@ if($new==1){
   }
 
 
-  $micro->save_default();
+
   }
 
   if($write == 1) {
-     $micro->save_default();
+#     $micro->save_default();
   }
 
 
@@ -606,7 +651,7 @@ sub usage {
 my $usage = << 'EOT';
 
                .--'"""""--.>_
-            .-'  o\\b.\o._o.`-.
+            .-'  o\\b.\o._o.`-.                 
          .-'.- )  \d888888888888b.
         /.'   b  Y8888888888888888b.
       .-'. 8888888888888888888888888b
@@ -624,7 +669,7 @@ my $usage = << 'EOT';
   J   \  `YY           ""'   ::  MM @)>F
    L  /)  88                  :  |  ""\|
    | ( (   Yb .            '  .  |     L
-   \   bo  8b    .            .  J     |        <0>_
+   \   bo  8b    .            .  J     |        
     \      "' .      .    .    .  L   F         <1>_
      o._.:.    .        .  \mm,__J/  /          <2>_
      Y8::'|.            /     `Y8P  J           <3>_
@@ -639,36 +684,43 @@ _.-d(          `:::.            F               5>_
 Y888888b.          `::::::::::'                 7>_
 Y88888888bo.        `::::::d                    8>_
 `"Y8888888888boo.._   `"dd88b.                  9>_
+                                                
+
+
+
 
 """""""""""""""""""""""""""""""""""""""""""""""
 
 EOT
 
 
-$usage =~ s/<0>_/The word $search/g;
-$usage =~ s/<1>_/has $senseNr concept's/g;
-$usage =~ s/<2>_/we need to find out the which one/g;
-$usage =~ s/<3>_/to use for our new,/g;
-$usage =~ s/<4>_/micro-structure/g;
+$usage =~ s/<0>_/\033[0;32mThe word $search\033[255;34m/g;
+$usage =~ s/<1>_/\033[0;32mhas $senseNr concept's\033[255;34m/g;
+$usage =~ s/<2>_/\033[0;32mwe need to find out the which one\033[255;34m/g;
+$usage =~ s/<3>_/\033[0;32mto use for our new,\033[255;34m/g;
+$usage =~ s/<4>_/\033[0;32mmicro-structure,\033[255;34m/g;
 $usage =~ s/<5>_//g;
 my @row = ();
 my $ii=0;
 foreach my $sensnrx (sort keys %{$data->{"rows"}->{"senses"}})
 {
 
-#    print Dumper  $data;
+
 
     my $row = $data->{"rows"}->{"senses"}->{$sensnrx};
     my $txt="";
 
      foreach(@{$row->{"basics"}}[1..2]){
-      $txt .= " $_";
+      next unless($_);
+       $txt .= sprintf("\033[0;31m %s\033[255;34m",$_);
     }
+
+    $txt .= sprintf("",$_);
     $usage =~ s/$sensnrx>_/($sensnrx):$txt/g;
 }
 
   foreach my $ii (0..16){
-    $usage =~ s/ $ii>_//g;
+    $usage =~ s/$ii>_//g;
   }
 
 
@@ -686,3 +738,17 @@ perl -MAI::MicroStructure::$i  -le '$m=AI::MicroStructure::'$i'; print join(",",
 perl -MAI::MicroStructure::$i  -le '$m=AI::MicroStructure::'$i'; print join(",",$m->name(scalar $m));
 print join(",",$m->categories());';
 done
+
+ my @oo;
+    
+          my @x=(); 
+    foreach my $xc(@{$ontology->{$line}}[0]){
+    foreach my $knot (grep{$_=~s/HAS MEMBER: |HAS PART: //g;}@{$xc}){
+        my @oo=map{$a = $micro->trim($_);  $a =~ s/ /_/g; $_=$micro->trim($a); }split(",",$knot);
+
+         foreach(@oo)  { push @x,[map{map{$a=$_; $a=~s/^*.=>//g; $_=$micro->trim($a);}split("\n|,",$micro->trim($_))}split("Sense[1-9](.*?)",`wn $_ -hypen -hypon -grepn`)];  };
+         
+      
+    }
+    
+

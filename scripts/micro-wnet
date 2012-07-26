@@ -5,14 +5,9 @@ exit 0;
 fi
 
 
-for i in $@; do
-echo -e "\n~~~@~~~"
-wn $i -synsn | sed '1,6d' |sed 's/Sense [[:digit:]]//g' | sed 's/[[:space:]]*=> //' | sed '/^$/d' | sed 's/ //g' | grep -iv $i | tr '\n' ' ';
-echo -e "\n~~~@~~~"
-wn $i -synsv | sed '1,6d' |sed 's/Sense [[:digit:]]//g' | sed 's/[[:space:]]*=> //' | sed '/^$/d' | sed 's/ //g' | grep -iv $i | tr '\n' ' ';
-echo -e "\n~~~@~~~"
-wn $i -hypen | sed '1,6d' |sed 's/Sense [[:digit:]]//g' | sed 's/[[:space:]]*=> //' | sed '/^$/d' | sed 's/ //g' | grep -iv $i | tr '\n' ' ';
-echo -e "\n~~~@~~~"
-wn $i -hypon | sed '1,6d' |sed 's/Sense [[:digit:]]//g' | sed 's/[[:space:]]*=> //' | sed '/^$/d' | sed 's/ //g' | grep -iv $i | tr '\n' ' ';
-echo -e "\n~~~@~~~"
-done;
+#wn $i -synsn | sed '1,6d' |sed 's/Sense [[:digit:]]//g' | sed 's/[[:space:]]*=> //' | sed '/^$/d' | sed 's/ //g' | grep -iv $i | tr '\n' ' ';
+#wn $i -synsv | sed '1,6d' |sed 's/Sense [[:digit:]]//g' | sed 's/[[:space:]]*=> //' | sed '/^$/d' | sed 's/ //g' | grep -iv $i | tr '\n' ' ';
+#wn $i -hypen | sed '1,6d' |sed 's/Sense [[:digit:]]//g' | sed 's/[[:space:]]*=> //' | sed '/^$/d' | sed 's/ //g' | grep -iv $i | tr '\n' ' ';
+
+wn $1 -hypon | sed 's/Sense/Sense~~~~~~~~~/g' | sed 's/[[:space:]]*=> / /' | sed '/^$/d' | sed 's/ //'  | sed 's/,/, /' | sed 's/HAS INSTANCE//g';
+

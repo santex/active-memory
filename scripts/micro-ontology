@@ -1,11 +1,28 @@
 #!/usr/bin/perl -W
 use Data::Dumper;
 use JSON;
-use Digest::MD5 qw(md5 md5_hex md5_base64);
+use Digest::MD5 qw(md5_hex);
+
+
+my ($words,$debug)=0;
+if( grep{/\bdebug\b/} @ARGV ){$debug = 1; cleanArgs("debug"); };
+if( grep{/\bwords\b/} @ARGV ){$words = 1; cleanArgs("words"); };
+
+
+sub cleanArgs{
+    my ($key) = @_;
+    my @tmp=();
+    foreach(@ARGV){
+    push @tmp,$_ unless($_=~/$key/);}
+
+    @ARGV=@tmp;
+}
+
 
 
 my $add={};
 my $m = my $body = my $sense = my $name = my $type = my $entity = "";
+my $mysense = 0;
 my $i = 0;
 # convert to lower case, translate ' ' to '_' and eliminate any
 # syntactic marker
@@ -68,6 +85,7 @@ Perl Safe error
 ";
 
 $m = $ARGV[0];
+$mysense = $ARGV[1] unless(!$ARGV[1]);
 $m = `micro any` unless($m);
 $m =~s/\n//g unless(!$m);
 #print  Dumper `wn  hydra  -over -hypen -hypon -synsn -smemn -membn -subsn -meron -holon -derin -domnn -famln -coorn -hmern -grepn`;# unless(!$m);
@@ -87,6 +105,12 @@ while($body =~ s{Sense*(.*?)\n(.*?)\n(.*?)\n(.*?)\n(.*?)\n(.*?)\n(.*?)\n(.*?)\n(
  @base = ();
 
  $sense   = trim($1);
+ 
+ if($mysense){
+ 
+  next unless($sense == $mysense);
+ }
+ 
  $name    = trim($2);
  $type    = trim($3);
  $entity  = trim($4);
@@ -106,14 +130,14 @@ while($body =~ s{Sense*(.*?)\n(.*?)\n(.*?)\n(.*?)\n(.*?)\n(.*?)\n(.*?)\n(.*?)\n(
 
  $string = sprintf "\n%s#%s#%s#%s#%s#%s#%s#%s#%s#%s#%s#%s#", $sense,$name,$type,$entity,$more0,$more1,$more2,$more3,$more4,$more5,$more6,$more7;
  $test = $string;
- #push @{$add->{$sense}->{stringy}},$string;
  while($test =~ s{([A-Z][A-Z].*?) (.*?)\#}{}x){
 
+  
   push @{$add->{$sense}},trim($1).trim($2);
 
  }
 
-#print $string;
+
 $base->{$sense}->{$i}=[] unless($sense eq '');
 
 push @{$base->{$sense}->{$i}},$name unless($name eq '');
@@ -137,16 +161,7 @@ sub importOntology {
 
   foreach(keys %$add){
 
-#push @{$ontology->{$_}[0]}, grep{/HAS INSTANCE/}@{$add->{$_}} unless !grep{/HAS\ INSTANCE/}@{$add->{$_}};
-#push @{$ontology->{$_}[1]}, grep{/TOPIC/}@{$add->{$_}} unless !grep{/TOPIC/}@{$add->{$_}};
-#push @{$ontology->{$_}[2]}, grep{/RELATED\ TO/}@{$add->{$_}} unless !grep{/RELATED\ TO/}@{$add->{$_}};
-#push @{$ontology->{$_}[3]}, grep{/INSTANCE\ OF/}@{$add->{$_}} unless !grep{/INSTANCE\ OF/}@{$add->{$_}};
-#push @{$ontology->{$_}[4]}, grep{/HAS\ PART/}@{$add->{$_}} unless !grep{/HAS\ PART/}@{$add->{$_}};
-#push @{$ontology->{$_}[5]}, grep{/MEMBER\ OF/}@{$add->{$_}} unless !grep{/MEMBER\ OF/}@{$add->{$_}};
-#push @{$ontology->{$_}[6]}, grep{/HAS\ MEMBER/}@{$add->{$_}} unless !grep{/HAS\ MEMBER/}@{$add->{$_}};
-
-#push @{$ontology->{$_}},sort grep{/[A-Z]/}@{$add->{$_}};# unless 1;# !grep{//}@{$add->{$_}};
-$ontology->{counts}->{$_}= [map{$_= $_;}grep{/[A-Z]/}@{$add->{$_}}];
+    $ontology->{counts}->{$_}= [map{$_= $_;}grep{/[A-Z]/}@{$add->{$_}}];
   }
 
   return $ontology;
@@ -162,18 +177,20 @@ sub importOntology2 {
   my $ix = 0;
   foreach my $sense (keys %$add){
 
- #   print $_;
-    #foreach my $cmd (@sets){
-#print $cmd;
     my $tmp={};
     push @{$ontology->{$sense}},grep{join("|",@sets)}@{$add->{$sense}};
 
     my $i=0;
+        $tmp->{search}=join("\|",<DATA>);
+    
     foreach(@{$ontology->{$sense}}){
+        $b=$_;
+        $b=~s/$tmp->{search}//g;
 
-        $tmp->{$_}=$i++;
+        $tmp->{$b}=$i++;
 
     }
+    unlink($tmp->{search});
     $ix+=$i;
     @{$ontology->{$sense}} = [sort keys $tmp,$i];
   }
@@ -183,11 +200,12 @@ sub importOntology2 {
 
   return $ontology;
 }
-#foreach(values %$ontology){
-   #printf("\n%s ",$_,$#{{$ontology->{$_}}});
-#}
-print Dumper importOntology($add),"Search=$m";
-print Dumper importOntology2($add),"Search=$m";
+
+   my $utf8 = encode_json(importOntology2($add));#,importOntology2($add)]
+
+   print $utf8;
+
+1;
 __DATA__
 HAS INSTANCE
 TOPIC

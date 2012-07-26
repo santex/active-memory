@@ -5,13 +5,13 @@ use threads qw[ yield ];
 use threads::shared;
 use Thread::Queue;
 use Time::HiRes qw[ sleep ];
-use constant NTHREADS => 5;
+use constant NTHREADS => 16;
     our $cache = new Cache::Memcached {
 'servers' => [ "127.0.0.1:11211"],
 'debug' => 0,
 'compress_threshold' => 10_000,
 } or warn($@);
-our  $dir = sprintf("%s/myperl/test/txt/ok/","/home/hagen");
+our  $dir = sprintf("%s/active-memory/test/txt/ok/","/home/hagen");
 
 sub trim
 {

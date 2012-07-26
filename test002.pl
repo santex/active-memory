@@ -1,7 +1,7 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -X
 use strict;
 use warnings;
-use JSON;
+use JSON::XS;
 use Data::Dumper;
 use AI::MicroStructure;
 use AI::MicroStructure::Ontology;
@@ -10,7 +10,27 @@ use AI::MicroStructure::Categorizer;
 use AI::MicroStructure::Memorizer;
 use AI::MicroStructure::Tree;
 use AI::MicroStructure::Collection;
-use AI::MicroStructure::IOMicroy;
+use IOMicroy;
+
+
+
+
+
+
+sub trim
+{
+
+	my $string = shift;
+  $string =  "" unless  $string;
+	$string =~ s/^\s+//;
+	$string =~ s/\s+$//;
+	$string =~ s/\t//;
+	$string =~ s/^\s//;
+	return $string;
+}
+
+
+#
 
 
 
@@ -28,17 +48,17 @@ my $configure = (
   cachhost=>"localhost",
   categories=>undef,
   couchport=>5984,
-  couchdbname=>"user",
+  couchdbname=>"wikilist",
   cacheport=>22922,
   uri=>"",
   home=>$ENV{HOME},
-  
+
 });
 
-$configure->{bookpath}=sprintf("%s/myperl/test/txt/ok",
+$configure->{bookpath}=sprintf("%s/active-memory/test/txt/ok",
                                 $configure->{home});
 
-$configure->{uri} = 
+$configure->{uri} =
     sprintf("http://%s:%s\@%s:%s/",
         $configure->{user},
         $configure->{pass},
@@ -47,8 +67,9 @@ $configure->{uri} =
 
 
 my $memo   = AI::MicroStructure::Memorizer->new(bookpath=>$configure->{bookpath});
-my $driver = AI::MicroStructure::Driver->new($configure);
-my $fitnes = AI::MicroStructure::Fitnes->new($configure);
+my $driver = AI::MicroStructure::Driver->new($configure)->{driver};
+
+#my $fitnes = AI::MicroStructure::Fitnes->new($configure);
 my $ontlgy = AI::MicroStructure::Ontology->new($configure);
 my $cat    = AI::MicroStructure::Categorizer->new(bookpath=>$configure->{bookpath});
 
@@ -56,13 +77,108 @@ my $cat    = AI::MicroStructure::Categorizer->new(bookpath=>$configure->{bookpat
 my $x = AI::MicroStructure->new(
 "AI::MicroStructure::Driver"      =>  $driver,
 "AI::MicroStructure::Ontology"    =>  $ontlgy,
-"AI::MicroStructure::Fitnes"      =>  $fitnes,
+#"AI::MicroStructure::Fitnes"      =>  $fitnes,
 "AI::MicroStructure::Memorizer"   =>  $memo,
 "AI::MicroStructure::Categorizer" =>  $cat,
 );
 
 
-1;
+print Dumper $cat->perform_standard_tests();
+
+#$memo->sampleRun();
+
+#print Dumper $driver;
+exit;
+
+
+
+my $files=decode_json($driver->{couch}->getList());
+my $set = {};
+foreach(@{$files->{rows}}){
+
+  my @r = @{$_->{value}};
+  print 1;
+  foreach my $link (@r) {
+  
+    $set->{$link}=1;
+  
+  }
+
+}
+
+
+print Dumper $set;
+
+exit;
+
+my $collection = {};
+#print Dumper `echo '$files' | data-freq --limit 40;`;
+foreach my $doc (@{$files->{rows}}){
+
+
+foreach my $d (@{$doc->{doc}->{"data"}->{tags}}){
+
+
+#next unless ref $doc->{doc}->{"data"}->{tags} ne "ARRAY";
+
+my $one = $doc->{doc}->{"data"}->{tags}[0][0];
+my $two = $doc->{doc}->{"data"}->{tags}[0][1];
+
+   $one = "_BLANK_" unless($one);
+      $two = "_BLANK_" unless($two);
+
+#next unless($one && $two);
+
+
+if(defined($two) && defined($collection->{$two}->{$one})){
+    $collection->{$two}->{$one}=$collection->{$two}->{$one}+1;
+
+}else{
+
+$collection->{$two}->{$one}=1;
+}
+#{doc}->{tags};
+}}
+
+        foreach my $name (keys %$collection){
+            my @symbols =();#map{$_=trim($_)}split(",",`micro-wnet $name`);
+        
+            IOMicroy::log("instance",$name,join("+",values %{$collection->{$name}}));#$#names);
+
+
+            foreach(values %{$collection->{$name}}) { IOMicroy::log("member",$name,$_);}
+           # $out->{buff} .= sprintf("\n%s", join (" ",($#names,$theme,$name)));
+
+            #use AI::MicroStructure::IOMicroy;
+
+
+           # $out->{buff} .= sprintf("\n%s", join (" ",($#names,$theme,$name)));
+
+            #use AI::MicroStructure::IOMicroy;
+
+        }
+        1;
+
+
+#        print Dumper $collection;
+
+my $tree = Tree::DAG_Node->lol_to_tree($collection);
+
+
+$memo->perform_standard_tests;
+$memo->sampleRun();
+
+
+my $diagram = $tree->draw_ascii_tree;
+print Dumper map "$_\n", @$diagram;
+
+
+
+
+#require AI::MicroStructure::any;
+#AI::MicroStructure::any->new("base");
+
+
 
 
 
@@ -82,17 +198,17 @@ my $lol =
                  [ 'died', 'VP'],
                  'S'
                ];
-     
-     
 
-    
+
+
+
  my $tree = Tree::DAG_Node->lol_to_tree($lol);
 
 
 
 $memo->perform_standard_tests;
 #$memo->sampleRun();
-            
+
 
              my $diagram = $tree->draw_ascii_tree;
               print map "$_\n", @$diagram;
@@ -104,7 +220,7 @@ my @terms = grep{length($_)<20}$memo->getTermList();
 
 
 #print Dumper [@terms];
-    
+
 print $x->{tools}->{"AI::MicroStructure::Memorizer"}->{out};
 
 
@@ -129,13 +245,13 @@ foreach(@{$bundle->{$main}}){
 my  @bv = @{$memo->query_simple_intersection([$main,lc $_])};
 
 if(defined($bv[0])){
-push @ar,[$main,$_,\@bv];    
+push @ar,[$main,$_,\@bv];
 
 printf("\n%s=%s",$main,$_);
 }
 
 $result = $wiki->search(lc $_);
-  if (defined($result) && $result->text() ) { 
+  if (defined($result) && $result->text() ) {
 
     foreach(grep {/[(]*[)]/} $result->related()){
       $bundle->{instance}->{$_}=$result->text();
@@ -144,7 +260,7 @@ $result = $wiki->search(lc $_);
   }
 
 }
-  
+
 }
 
 $driver->{'driver'}->{'couch'}->store("booknotes",[@ar,keys %{$bundle->{instance} } ]);
@@ -164,7 +280,7 @@ $driver->{'driver'}->{'couch'}->store("booknotes",[@ar,keys %{$bundle->{instance
 
 
 my $ix=0;
-my @i=[0,0];    
+my @i=[0,0];
     my $out = {};
     my @t = $x->themes;
     my @mods  =  grep/^[A-Z]/,keys %{{$x->find_modules}};
@@ -179,11 +295,14 @@ my @i=[0,0];
         my @names = map {$_=lc $_ } $x->name($theme,AI::MicroStructure->new( $theme )->name);
 
 
-       
+
         foreach my $name (@names){
-        
+
             AI::MicroStructure::IOMicroy::log("io",$ix++,$theme,$name,$#names);
             $out->{buff} .= sprintf("\n%s", join (" ",($#names,$theme,$name)));
+
+            #use AI::MicroStructure::IOMicroy;
+
         }
       }
 
@@ -228,17 +347,17 @@ INIT{
 $configure->{bookpath}=sprintf("%s/myperl/test/txt/ok",
                                 $configure->{home});
 
-$configure->{uri} = 
+$configure->{uri} =
     sprintf("http://%s:%s\@%s:%s/",
         $configure->{user},
         $configure->{pass},
         $configure->{couchhost},
         $configure->{couchport});
-        
+
 
 };
 
-        
+
 my $memo   = AI::MicroStructure::Memorizer->new(bookpath=>$configure->{bookpath});
 my $driver = AI::MicroStructure::Driver->new($configure);
 my $fitnes = AI::MicroStructure::Fitnes->new($configure);
@@ -256,6 +375,6 @@ my $x = AI::MicroStructure->new(
 
 
  for i in `perl -MAI::MicroStructure -le 'print for AI::MicroStructure->themes;'`; do echo $i; done
- 
+
  count=0; for i in `perl -MAI::MicroStructure -le 'print  for AI::MicroStructure->themes';`; do echo "@@@@@@@@@@<SET>@@@@@@@@@@@@<"$count">@@@@@@@@@<"$i">@@@@@@@@@"; count=$(expr $count + 1); perl -MAI::MicroStructure::$i  -le '$m=AI::MicroStructure::'$i'; print join(",", $m->name(scalar $m));'; perl -MAI::MicroStructure::$i  -le '$m=AI::MicroStructure::'$i'; print join(",",$m->name(scalar $m)); print join(",",$m->categories()); print 1; $ENV{LANGUAGE} , $ENV{LANG}; ';   done
 

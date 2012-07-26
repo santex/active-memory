@@ -2,7 +2,7 @@ use strict;
 use Test::More;
 use AI::MicroStructure ();
 $ENV{AMS_REMOTE} = 1;
-@ARGV=("galaxie");
+@ARGV=("galaxies");
 my @themes =
     grep { eval "require $_;"; $_->has_remotelist() }
     map {"AI::MicroStructure::$_"} AI::MicroStructure->themes();

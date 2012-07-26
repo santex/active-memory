@@ -37,6 +37,7 @@ WriteMakefile(
 'scripts/micro-main',
 'scripts/micro-steemer',
 'scripts/micro-wikiend',
+'scripts/micro-ontology',
 'scripts/micro-wnet',
 'scripts/micro',
 'scripts/micro-bashcommand',
