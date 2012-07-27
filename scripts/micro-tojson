@@ -84,7 +84,7 @@ for my $test (sort @metas) {
     $doc->{lang}= $meta->{lang};    
     $doc->{category}= $meta->{category};    
     
-    $doc->{names} = [$meta->theme,metaname($doc->{count})];
+    $doc->{names} = [$meta->theme,microname($doc->{count})];
     
     $doc->{search} = lc join("\|",@{$doc->{names}});
 
@@ -351,7 +351,7 @@ use AI::MicroStructure;
 use Data::Dumper;
 my $collection = {};
 my $struct;
-my @themes = metaname(10000);
+my @themes = microname(10000);
 foreach my $x(@themes)
 {
 my $struct = AI::MicroStructure->new($x=>10);

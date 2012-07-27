@@ -4,10 +4,5 @@ echo "you need a word you want to check"
 exit 0;
 fi
 
-
-#wn $i -synsn | sed '1,6d' |sed 's/Sense [[:digit:]]//g' | sed 's/[[:space:]]*=> //' | sed '/^$/d' | sed 's/ //g' | grep -iv $i | tr '\n' ' ';
-#wn $i -synsv | sed '1,6d' |sed 's/Sense [[:digit:]]//g' | sed 's/[[:space:]]*=> //' | sed '/^$/d' | sed 's/ //g' | grep -iv $i | tr '\n' ' ';
-#wn $i -hypen | sed '1,6d' |sed 's/Sense [[:digit:]]//g' | sed 's/[[:space:]]*=> //' | sed '/^$/d' | sed 's/ //g' | grep -iv $i | tr '\n' ' ';
-
-wn $1 -hypon | sed 's/Sense/Sense~~~~~~~~~/g' | sed 's/[[:space:]]*=> / /' | sed '/^$/d' | sed 's/ //'  | sed 's/,/, /' | sed 's/HAS INSTANCE//g';
+wn $1 -hypon -hypen -synsv -synsn | sed 's/Sense/Sense~~~~~~~~~/g' | sed 's/[[:space:]]*=> / /' | sed '/^$/d' | sed 's/ //'  | sed 's/,/, /' | sed 's/HAS INSTANCE//g';
 

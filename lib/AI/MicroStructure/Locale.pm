@@ -1,7 +1,7 @@
 package AI::MicroStructure::Locale;
 use strict;
 use warnings;
-use AI::MicroStructure (); # do not export metaname and friends
+use AI::MicroStructure (); # do not export microname and friends
 use AI::MicroStructure::MultiList;
 use List::Util qw( shuffle );
 use Carp;

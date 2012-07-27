@@ -1,4 +1,4 @@
-#!/usr/bin/perl -X
+#!/usr/bin/perl -W
 package AI::MicroStructure;
 use strict;
 use warnings;
@@ -112,16 +112,16 @@ sub import {
     $Theme = $themes[0] if @themes;
     $micro = AI::MicroStructure->new( $Theme );
 
-    # export the metaname() function
+    # export the microname() function
     no strict 'refs';
     my $callpkg = caller;
-    *{"$callpkg\::metaname"} = \&metaname;    # standard theme
+    *{"$callpkg\::microname"} = \&microname;    # standard theme
 
     # load the classes in @themes
     for my $theme( @themes ) {
         eval "require AI::MicroStructure::$theme; import AI::MicroStructure::$theme;";
         croak $@ if $@;
-        *{"$callpkg\::meta$theme"} = sub { $micro->name( $theme, @_ ) };
+        *{"$callpkg\::micro$theme"} = sub { $micro->name( $theme, @_ ) };
     }
 }
 
@@ -134,7 +134,7 @@ sub new {
 #       $driver = AI::MicroStructure::Driver->new;
 
     # defer croaking until name() is actually called
-    bless { theme => $theme, tools => { @tools }, meta => {}}, $class;
+    bless { theme => $theme, tools => { @tools }, micro => {}}, $class;
 
 
 
@@ -173,10 +173,10 @@ EOC
         eval $code;
         $MICRO{$theme} = 1; # loaded
 
-        # export the metatheme() function
+        # export the microtheme() function
         no strict 'refs';
         my $callpkg = caller;
-        *{"$callpkg\::meta$theme"} = sub { $micro->name( $theme, @_ ) };
+        *{"$callpkg\::micro$theme"} = sub { $micro->name( $theme, @_ ) };
     }
 }
 
@@ -225,7 +225,7 @@ sub load_data {
 }
 
 # main function
-sub metaname { $micro->name( @_ ) };
+sub microname { $micro->name( @_ ) };
 
 # corresponding method
 sub name {
@@ -241,17 +241,17 @@ sub name {
         ( $theme, $count ) = ( $self->{theme}, 1 );
     }
 
-    if( ! exists $self->{meta}{$theme} ) {
+    if( ! exists $self->{micro}{$theme} ) {
         if( ! $MICRO{$theme} ) {
             eval "require AI::MicroStructure::$theme;";
             croak "MicroStructure list $theme does not exist!" if $@;
             $MICRO{$theme} = 1; # loaded
         }
-        $self->{meta}{$theme} =
+        $self->{micro}{$theme} =
           "AI::MicroStructure::$theme"->new( %{ $self->{tools} } );
     }
 
-    $self->{meta}{$theme}->name( $count );
+    $self->{micro}{$theme}->name( $count );
 }
 
 # other methods
@@ -269,8 +269,8 @@ sub count {
     }
 
 
-     if( ! exists $self->{meta}{$theme} ) {
-         return scalar ($self->{meta}{$theme}->new);
+     if( ! exists $self->{micro}{$theme} ) {
+         return scalar ($self->{micro}{$theme}->new);
     }
 
     return 0;
@@ -297,7 +297,7 @@ sub getBundle {
 
 
 my @themes = grep { !/^(?:any)/ } AI::MicroStructure->themes;
-my @metas;
+my @micros;
 my @search=[];
 for my $theme (@themes) {
     no strict 'refs';
@@ -306,7 +306,7 @@ for my $theme (@themes) {
     my %isa = map { $_ => 1 } @{"AI::MicroStructure::$theme\::ISA"};
     if( exists $isa{'AI::MicroStructure::Locale'} ) {
         for my $lang ( "AI::MicroStructure::$theme"->languages() ) {
-            push @metas,
+            push @micros,
                 ["AI::MicroStructure::$theme"->new( lang => $lang ),$lang];
 
 
@@ -314,18 +314,18 @@ for my $theme (@themes) {
     }
     elsif( exists $isa{'AI::MicroStructure::MultiList'} ) {
         for my $cat ( "AI::MicroStructure::$theme"->categories(), ':all' ) {
-            push @metas,
+            push @micros,
                 [ "AI::MicroStructure::$theme"->new( category => $cat ),$cat];
         }
     }
     else {
-        push @metas, ["AI::MicroStructure::$theme"->new(),''];
+        push @micros, ["AI::MicroStructure::$theme"->new(),''];
     }
 }
 
 my  $all ={};
 
-for my $test (@metas) {
+for my $test (@micros) {
     my $micro = $test->[0];
     my %items;
     my $items = $micro->name(0);
@@ -494,8 +494,10 @@ my $new = {};
 foreach my $k (grep{!/^[0-9]/}map{$_=$self->trim($_)}@{$data->{rows}->{"search"}}){
   
     $k =~ s/[ ]/_/g; 
-    
-    $new->{$k}=[map{$_=[map{$_=$self->trim($_)}split("\n|, ",$_)]}grep{!/Hyponyms/}split("sense~~~~~~~~~",lc `micro-wnet $k`)];
+    $k =~ s/[\(]|[\)]//g; 
+    next if($k=~/synonyms|hypernyms/);
+    print $k;    
+    $new->{$k}=[map{$_=[map{$_=$self->trim($_)}split("\n|, ",$_)]}grep{!/synonyms|hypernyms/}split("sense~~~~~~~~~",lc `micro-wnet $k`)];
     next unless(@{$new->{$k}});
 #    $new->{$k}=~s/Sense*\n(.*?)\n\n/$1/g;
 #    @{$new->{$k}} = [split("\n|,",$new->{$k})];
@@ -582,6 +584,9 @@ if($new==1){
   use JSON;
 
   my $data = decode_json(lc`micro-sense $ThemeName words`);
+  
+
+#	print Dumper $data;
   my $char;
   my $line;
   my $senses=@{$data->{"senses"}};
@@ -615,7 +620,7 @@ if($new==1){
 #    my @ontology = decode_json(`micro-ontology $ThemeName $line`);
 
  #   $micro->save_default($data,$line);
-    printf Dumper "\ncool!!!!\n";
+ #   printf "\ncool!!!!\n";
     exit 0;
   }else{
 
@@ -732,11 +737,10 @@ return $usage;
 __DATA__
 count=0;
 for i in `perl -MAI::MicroStructure -le 'print  for AI::MicroStructure->themes';`; do
-echo "@@@@@@@@@@<SET>@@@@@@@@@@@@<"$count">@@@@@@@@@<"$i">@@@@@@@@@";
+echo "@@@@<SET>@@@@<"$count">@@@@<"$i">@@@@";
 count=$(expr $count + 1);
-perl -MAI::MicroStructure::$i  -le '$m=AI::MicroStructure::'$i'; print join(",", $m->name(scalar $m));';
-perl -MAI::MicroStructure::$i  -le '$m=AI::MicroStructure::'$i'; print join(",",$m->name(scalar $m));
-print join(",",$m->categories());';
+perl -MAI::MicroStructure::$i  -le '$m=AI::MicroStructure::'$i'; print join(" ",$m->name(scalar $m));
+print join("\n",$m->categories());';
 done
 
  my @oo;

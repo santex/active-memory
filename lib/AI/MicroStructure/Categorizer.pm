@@ -81,7 +81,7 @@ sub catfile{
   my @cat = map{
                my @x = split(":",$_); 
                   $_ = $self->trim($x[1]); 
-               }split("\n",
+               }split("\n",lc 
     `microdict $path | data-freq --limit 500`);
   
   $cat->{subject} = [@cat[0..10]];
@@ -182,11 +182,11 @@ my  $test_set = { };
 my @theme = split("\n",`perl -MAI::MicroStructure -le 'print for AI::MicroStructure->themes;'`);
 foreach(@theme){
   my $name = lc $_;
-  my $sub = lc `micro $name 1`;
-  my $body = lc `micro $name 2`;
+  my $sub = lc $_;#`micro $name`;
+  my $body = lc `micro $name 3`;
   $body=~ s/\n/ /g;
     $sub=~ s/\n/ /g;
-      $name=~ s/_/ /g;
+      $name=~ s/_//g;
     $sub=~ s/_//g;
   $body=~ s/_//g;
   $test_set->{$name} = {content =>{
@@ -280,7 +280,7 @@ my $b = $r->best_category;
            $b,
            $r->scores($b),
            $self->{booknames}->{$b},
-           sprintf `microdict $self->{booknames}->{$b} | data-freq --limit 50`);
+           sprintf lc `microdict $self->{booknames}->{$b} | data-freq --limit 10`);
 
   }
 

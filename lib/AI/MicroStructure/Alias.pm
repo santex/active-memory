@@ -15,7 +15,7 @@ sub init {
     no warnings;
 
     # copy almost everything over from the original
-    for my $k ( grep { ! /^(?:Theme|meta|import)$/ }
+    for my $k ( grep { ! /^(?:Theme|micro|import)$/ }
         keys %{"AI::MicroStructure::$alias\::"} )
     {
         *{"$class\::$k"} = *{"AI::MicroStructure::$alias\::$k"};
@@ -23,12 +23,12 @@ sub init {
 
     # local things
     ${"$class\::Theme"} = ( split /::/, $class )[-1];
-    ${"$class\::meta"}  = $class->new();
+    ${"$class\::micro"}  = $class->new();
     *{"$class\::import"} = sub {
         my $callpkg = caller(0);
         my $theme   = ${"$class\::Theme"};
-        my $meta    = $class->new();
-        *{"$callpkg\::meta$theme"} = sub { $meta->name(@_) };
+        my $micro    = $class->new();
+        *{"$callpkg\::micro$theme"} = sub { $micro->name(@_) };
       };
 }
 

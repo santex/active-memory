@@ -1,6 +1,6 @@
 package AI::MicroStructure::List;
 use strict;
-use AI::MicroStructure (); # do not export metaname and friends
+use AI::MicroStructure (); # do not export microname and friends
 use AI::MicroStructure::RemoteList;
 use List::Util qw( shuffle );
 use Carp;
@@ -22,10 +22,10 @@ sub init {
     *{"$class\::import"} = sub {
         my $callpkg = caller(0);
         my $theme   = ${"$class\::Theme"};
-        my $meta    = $class->new();
-        *{"$callpkg\::meta$theme"} = sub { $meta->name(@_) };
+        my $micro    = $class->new();
+        *{"$callpkg\::micro$theme"} = sub { $micro->name(@_) };
       };
-    ${"$class\::meta"} = $class->new();
+    ${"$class\::micro"} = $class->new();
 }
 
 sub name {
@@ -35,7 +35,7 @@ sub name {
     if( ! $class ) { # called as a class method!
         $class = $self;
         no strict 'refs';
-        $self = ${"$class\::meta"};
+        $self = ${"$class\::micro"};
     }
 	no strict 'refs';
 

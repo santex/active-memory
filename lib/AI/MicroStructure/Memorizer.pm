@@ -1,4 +1,4 @@
-#!/usr/bin/perl	-X
+#!/usr/bin/perl	-W
 package AI::MicroStructure::Memorizer;
 use strict;
 use warnings;
@@ -434,33 +434,43 @@ sub query_simple_mixed{
 sub sampleRun{
 
     my $self = shift;
-
-    my @ranked_docs = $self->{context}->simple_search( 'dna' );
+    my $intrest = {};
+    
+    
+    $intrest->{base}="physics";
+    $intrest->{second}=lc `micro`;
+    
+    $intrest->{base}=~s/_|\n/ /g;
+    $intrest->{second}=~s/_|\n/ /g;
+    
+    my @ranked_docs = $self->{context}->simple_search($intrest->{base});
         
+        
+
     my $out = "";
-$self->{out} .=  sprintf "<hr/><h1>dna only</h1>\n";
+$self->{out} .=  sprintf "<hr/><h1>%s only</h1>\n",$intrest->{base};
     
-$self->{out} .=  sprintf Dumper [
+  printf Dumper [
       $self->{context}->intersection(
-        terms => ['dna'])];
+        terms => [$intrest])];
 
-$self->{out} .=  sprintf "<hr/><h1>dna + rna</h1>\n";
+$self->{out} .=  sprintf "<hr/><h1>%s + %s</h1>\n",$intrest->{base},$intrest->{second};
     
-$self->{out} .=  sprintf Dumper [
+printf Dumper [
       $self->{context}->intersection(
-        terms => ['dna', 'rna'])];
+        terms => [$intrest->{base},$intrest->{second}])];
 
 
-$self->{out} .=  sprintf "<hr/><h1>dna + rna + synthetic</h1>\n";
+$self->{out} .=  sprintf "<hr/><h1>%s + %s + synthetic</h1>\n",$intrest->{base},$intrest->{second};
 $self->{out} .=  sprintf Dumper [
       $self->{context}->intersection(
-        terms => ['dna', 'rna','synthetic'] )];
+        terms => [$intrest->{base},$intrest->{second}] )];
         
-$self->{out} .=  sprintf "<hr/><h1>drill down AI</h1>\n\n";
+$self->{out} .=  sprintf "<hr/><h1>drill down</h1>\n\n";
     
 
     @ranked_docs = $self->{context}->intersection(
-      terms=>['artificial','computer']);
+      terms=>[$intrest->{base},$intrest->{second}]);
 
 $self->{out} .=  sprintf
       "<hr/><h1>intersection[programming,computer]".
@@ -533,9 +543,9 @@ $self->{out} .=  sprintf "\n<br>\n<b>worndnet suport / compute strong similar te
         #print Dumper $s2;
         foreach (sort {$a cmp $b} keys %$s2)
         {
-          next unless($s2->{$_}>=0.75);
+          next unless($s2->{$_}>=0.995);
           
-$self->{out} .=  sprintf("\n(%s%s)\n%3.3f",sprintf($self->trim(`micro-wnet $_`)),$_,$s2->{$_});
+$self->{out} .=  sprintf("\n(%s=%3.3f)",$_,$s2->{$_});
         }
 
 return $self->{out};

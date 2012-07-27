@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl -W
 package IOMicroy;
 use strict;
 use warnings;

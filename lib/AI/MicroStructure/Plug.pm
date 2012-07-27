@@ -408,7 +408,7 @@ END_OF_SQL
       foreach my $class (@classes) {
         #print "#" x 70, "\n";
         if ($class->isa('Rose::DB::Object')) {
- #         print $class->meta->perl_class_definition;
+ #         print $class->micro->perl_class_definition;
         } else {                # Rose::DB::Object::Manager subclasses
 #          print $class->perl_class_definition, "\n";
         }
