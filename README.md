@@ -14,7 +14,15 @@ active-memory
   ☞ [One liners]  (if all installed including dependencies)
   
 ```
-    
+>sudo micro new planet
+
+start of with (creates a new micro-structure called planet)
+only one level ontology for now!!!) but goes for nearly all 
+english words (proper words)
+
+invokes the concept selection you can get all possible concepts there :) from Spock
+
+hagen@sante12:~/myperl/AI-MicroStructure-0.01$ sudo micro new planet
   
                .--'"""""--.>_
             .-'  o\\b.\o._o.`-.                 
