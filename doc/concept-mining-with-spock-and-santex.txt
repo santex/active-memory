@@ -1,4 +1,5 @@
 
+
   
   
                .--'"""""--.>_
@@ -20,7 +21,7 @@
   J   \  `YY           ""'   ::  MM @)>F
    L  /)  88                  :  |  ""\|
    | ( (   Yb .            '  .  |     L
-   \   bo  8b    .            .  J     |        
+   \   bo  8b    .            .  J     |        The word chaos
     \      "' .      .    .    .  L   F         has 4 concept's
      o._.:.    .        .  \mm,__J/  /          we need to find out the which one
      Y8::'|.            /     `Y8P  J           to use for our new,
@@ -70,7 +71,7 @@ topsy-turvydom
 topsy-turvyness
 confusion
 hagen@sante12:~/myperl/AI-MicroStructure-0.01$ sudo micro new chaos
-bedlam
+disorder
 
 
   
@@ -94,7 +95,7 @@ bedlam
   J   \  `YY           ""'   ::  MM @)>F
    L  /)  88                  :  |  ""\|
    | ( (   Yb .            '  .  |     L
-   \   bo  8b    .            .  J     |        
+   \   bo  8b    .            .  J     |        The word chaos
     \      "' .      .    .    .  L   F         has 4 concept's
      o._.:.    .        .  \mm,__J/  /          we need to find out the which one
      Y8::'|.            /     `Y8P  J           to use for our new,
@@ -130,7 +131,7 @@ entity
 chaos
 physical_phenomenon
 hagen@sante12:~/myperl/AI-MicroStructure-0.01$ sudo micro new chaos
-natural_phenomenon
+physical_process
 
 
   
@@ -154,7 +155,7 @@ natural_phenomenon
   J   \  `YY           ""'   ::  MM @)>F
    L  /)  88                  :  |  ""\|
    | ( (   Yb .            '  .  |     L
-   \   bo  8b    .            .  J     |        
+   \   bo  8b    .            .  J     |        The word chaos
     \      "' .      .    .    .  L   F         has 4 concept's
      o._.:.    .        .  \mm,__J/  /          we need to find out the which one
      Y8::'|.            /     `Y8P  J           to use for our new,
@@ -201,7 +202,7 @@ entity
 chaos
 instance_of_greek_deity
 hagen@sante12:~/myperl/AI-MicroStructure-0.01$ sudo micro new chaos
-abstraction
+deity
 
 
   
@@ -225,7 +226,7 @@ abstraction
   J   \  `YY           ""'   ::  MM @)>F
    L  /)  88                  :  |  ""\|
    | ( (   Yb .            '  .  |     L
-   \   bo  8b    .            .  J     |        
+   \   bo  8b    .            .  J     |        The word chaos
     \      "' .      .    .    .  L   F         has 4 concept's
      o._.:.    .        .  \mm,__J/  /          we need to find out the which one
      Y8::'|.            /     `Y8P  J           to use for our new,
