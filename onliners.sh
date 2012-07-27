@@ -4,10 +4,17 @@ count=0;
 
 #SHOW 1 RANDOM NODE
 micro; echo "(returns a random node)";
+#OR
+perl -Micro -E "print say+microname;"
+
 
 
 #SHOW 10 RANDOM NODES
 micro any 10; echo "(returns 10 random node)";
+#OR
+perl -Micro -E "print say+microname+10;"
+
+
 
 #SHOW 8 RANDOM PLANETS
 micro planets 8; echo " (returns 8 random nodes from micro structure planets)";
