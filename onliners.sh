@@ -11,7 +11,7 @@ perl -Micro -E "print say+microname;"
 
 #SHOW 10 RANDOM NODES
 micro any 10; 
-echo "(returns 10 random node)";
+echo "(returns 10 random nodes)";
 #OR
 perl -Micro -E "print say+microname+10;"
 
