@@ -11,8 +11,19 @@ active-memory
   are some pictures i made durring using and developing 
 ```  
   
-  ☞ [One liners]  (if all installed including dependencies)
+  ☞ [One liners]  
+     (if all installed including dependencies)
   
+```  
+count=0;
+for i in `perl -MAI::MicroStructure -le 'print  for AI::MicroStructure->themes';`; do
+echo "@@@@<SET>@@@@<"$count">@@@@<"$i">@@@@";
+count=$(expr $count + 1);
+perl -MAI::MicroStructure::$i  -le '$m=AI::MicroStructure::'$i'; print join(" ",$m->name(scalar $m));
+print join("\n",$m->categories());';
+done
+```
+
 ```
 >sudo micro new planet
 
@@ -156,7 +167,7 @@ inferior_planet
  * [Wiki] open
  * [Bit-torrent] open
 
-#### Status
+### # Status
 
   Not finished, any help is welcome
 
