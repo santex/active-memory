@@ -12,8 +12,26 @@ active-memory
 ```  
   
   ☞ [One liners]  
-     (if all installed including dependencies)
-  
+echo #CREATES micro-structure planet;     (if all installed including dependencies calls spock) 
+
+``````
+echo #CREATES micro-structure planet calls spock; 
+sudo micro new planet;
+```
+```
+echo #Loads 1 element from micro-structure planet to the terminal
+micro planet;
+```
+```
+echo  #Loads 10 element from micro-structure planet to the terminal;      
+micro planet 10;      
+```
+```
+echo #DELETES the structure; 
+sudo micro drop planet; 
+      
+```
+
 ```  
 count=0;
 for i in `perl -MAI::MicroStructure -le 'print  for AI::MicroStructure->themes';`; do
