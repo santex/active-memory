@@ -7,8 +7,8 @@ active-memory
   ☞ [Pictures] 
   
 ```
-  unter active-memory/docs/img
-  are some pictures i made durring using and developing 
+  active-memory/docs/img
+  are some pictures i made durring use &  developing 
 ```  
   
   ☞ [One liners]  
