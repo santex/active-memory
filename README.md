@@ -464,3 +464,8 @@ bedlam,
 hagen@sante12:~/myperl/AI-MicroStructure-0.01$ sudo micro chaos 
 topsy-turvydom,
 ```
+
+
+#### Copyright
+
+  Copyright (C) 2009-2012 Hagen "santex" Geissler
