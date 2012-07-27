@@ -2,6 +2,82 @@ active-memory
 ===================
 
 
+## Get going 
+
+  ☞ [Pictures] 
+  
+```
+  unter active-memory/docs/img
+  are some pictures i made durring using and developing 
+```  
+  
+  ☞ [One liners]  (if all installed including dependencies)
+  
+```
+    
+  
+               .--'"""""--.>_
+            .-'  o\\b.\o._o.`-.                 
+         .-'.- )  \d888888888888b.
+        /.'   b  Y8888888888888888b.
+      .-'. 8888888888888888888888888b
+     / o888 Y Y8888888888888888888888b
+     / d888P/ /| Y"Y8888888888888888888b
+   J d8888/| Y .o._. "Y8888888888888Y" \
+   |d Y888b|obd88888bo. """Y88888Y' .od8
+   Fdd 8888888888888888888bo._'|| d88888|
+   Fd d 88\ Y8888Y "Y888888888b, d888888P
+   d-b 8888b Y88P'     """""Y888b8888P"|
+  J  8\88888888P    `m.        """""   |
+  || `8888888P'       "Ymm._          _J
+  |\\  Y8888P  '     .mmm.YM)     .mMF"'
+  | \\  Y888J     ' < (@)>.- `   /MFm. |
+  J   \  `YY           ""'   ::  MM @)>F
+   L  /)  88                  :  |  ""\|
+   | ( (   Yb .            '  .  |     L
+   \   bo  8b    .            .  J     |        
+    \      "' .      .    .    .  L   F         has 3 concept's
+     o._.:.    .        .  \mm,__J/  /          we need to find out the which one
+     Y8::'|.            /     `Y8P  J           to use for our new,
+     `|'  J:   . .     '   .  .   | F           micro-structure,
+      |    L          ' .    _:    |            
+      |    `:        . .:oood8bdb. |            (1): astronomy any of the nine large celestial bodies in the solar system that revolve around the sun and shine by reflected light; mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, and pluto in order of their proximity to the sun; viewed from the constellation hercules, all the planets rotate around the sun in a counterclockwise direction
+      F     `:.          "-._   `" F            (2): a person who follows or serves another
+     /       `::.           """'  /             (3): any celestial body other than comets or satellites
+    /         `::.          ""   /              
+_.-d(          `:::.            F               
+-888b.          `::::.     .  J                 
+Y888888b.          `::::::::::'                 
+Y88888888bo.        `::::::d                    
+`"Y8888888888boo.._   `"dd88b.                  
+                                                
+
+
+
+
+"""""""""""""""""""""""""""""""""""""""""""""""
+
+
+  Type: the number you choose 1..3
+  1
+$VAR1 = '
+cool!!!!
+';
+hagen@sante12:~/myperl/AI-MicroStructure-0.01$ micro planet 10
+major_planet
+gas_giant
+morning_star
+daystar
+superior_planet
+hesperus
+terrestrial_planet
+vesper
+jovian_planet
+inferior_planet
+
+  
+```  
+  
 
 
 #### Implementation
