@@ -19,7 +19,7 @@ echo #CREATES micro-structure planet calls spock;
 sudo micro new planet;
 ```
 ```
-echo #Loads 1 element from micro-structure planet to the terminal
+echo #Loads 1 element from micro-structure planet to the terminal;
 micro planet;
 ```
 ```
@@ -33,6 +33,7 @@ sudo micro drop planet;
 ```
 
 ```  
+echo #LOOPS OVER ALL; 
 count=0;
 for i in `perl -MAI::MicroStructure -le 'print  for AI::MicroStructure->themes';`; do
 echo "@@@@<SET>@@@@<"$count">@@@@<"$i">@@@@";
@@ -42,16 +43,19 @@ print join("\n",$m->categories());';
 done
 ```
 
-```
->sudo micro new planet
-
 start of with (creates a new micro-structure called planet)
 only one level ontology for now!!!) but goes for nearly all 
 english words (proper words)
 
+
+```
+sudo micro new planet;
+```
+
 invokes the concept selection you can get all possible concepts there :) from Spock
 
-hagen@sante12:~/myperl/AI-MicroStructure-0.01$ sudo micro new planet
+```
+sudo micro new planet
   
                .--'"""""--.>_
             .-'  o\\b.\o._o.`-.                 
