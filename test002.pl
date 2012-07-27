@@ -83,9 +83,9 @@ my $x = AI::MicroStructure->new(
 );
 
 
-print Dumper $cat->perform_standard_tests();
+print $memo->perform_standard_tests();
 
-#$memo->sampleRun();
+print Dumper $memo->sampleRun();
 
 #print Dumper $driver;
 exit;

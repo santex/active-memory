@@ -1,0 +1,33 @@
+
+@ARGV=("user",
+      "pass",
+      "localhost");
+
+my $configure = (
+{
+  user=>$ARGV[0],
+  pass=>$ARGV[1],
+  dbfile=>sprintf("%s/active-memory/berkeley.dat",$ENV{HOME}),
+  couchhost=>$ARGV[2],
+  cachhost=>"localhost",
+  cachhost=>"localhost",
+  categories=>undef,
+  couchport=>5984,
+  couchdbname=>"wikilist",
+  cacheport=>22922,
+  uri=>"",
+  home=>$ENV{HOME},
+
+});
+
+$configure->{bookpath}=sprintf("%s/active-memory/test/txt/ok",
+                                $configure->{home});
+
+$configure->{uri} =
+    sprintf("http://%s:%s\@%s:%s/",
+        $configure->{user},
+        $configure->{pass},
+        $configure->{couchhost},
+        $configure->{couchport});
+
+

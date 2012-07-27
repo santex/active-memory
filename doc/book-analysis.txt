@@ -1,0 +1,83 @@
+The Scoreing (score 0.***) indicates the level of true
+
+
+
+[planets planets mercury uranus venus]
+is in category 18, with score 0.870
+/home/hagen/active-memory/test/txt/ok/brookhart_-_go_figure_-_using_math_to_solve_everyday_imponderables_mcgraw_1998_.pdf.txt
+255: ion
+218: ing
+110: number
+ 95: formula
+ 85: ith
+ 78: igure
+ 71: les
+ 70: years
+ 69: ime
+ 63: ill
+
+
+
+[planet planet majorplanet daystar terrestrialplanet]
+is in category 18, with score 0.883
+/home/hagen/active-memory/test/txt/ok/brookhart_-_go_figure_-_using_math_to_solve_everyday_imponderables_mcgraw_1998_.pdf.txt
+255: ion
+218: ing
+110: number
+ 95: formula
+ 85: ith
+ 78: igure
+ 71: les
+ 70: years
+ 69: ime
+ 63: ill
+
+
+
+[spaceflight spaceflight judithresnik spider michaelpanderson]
+is in category 1, with score 0.386
+/home/hagen/active-memory/test/txt/ok/copeland_-_the_essential_turing_-_writings_on_computing_ai_etc._oxford_2004_.pdf.txt
+1803: machine
+1293: turing
+ 518: number
+ 467: turings
+ 464: machines
+ 420: enigma
+ 408: computer
+ 404: computing
+ 376: system
+ 375: computable
+
+
+
+[universe universe naturalorder world creation]
+is in category 12, with score 0.982
+/home/hagen/active-memory/test/txt/ok/berkshire_encyclopedia_of_world_history_vol_1_-_unknown.pdf.txt
+956: world
+509: university
+477: history
+344: century
+320: art
+312: rst
+302: human
+287: africa
+284: encyclopedia
+280: modern
+
+
+
+[physics physics cryogeny electromagnetics optics]
+is in category 13, with score 0.817
+/home/hagen/active-memory/test/txt/ok/atomic_physics_-_c._foot_oxford_2005_ww.pdf.txt
+907: atoms
+631: energy
+541: quantum
+524: frequency
+517: laser
+482: fig
+473: eqn
+467: eld
+439: atomic
+370: magnetic
+
+$VAR1 = 0;

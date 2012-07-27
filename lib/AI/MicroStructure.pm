@@ -1,4 +1,4 @@
-#!/usr/bin/perl -W
+#!/usr/bin/perl -X
 package AI::MicroStructure;
 use strict;
 use warnings;

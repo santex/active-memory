@@ -1,4 +1,4 @@
-#!/usr/bin/perl -W
+#!/usr/bin/perl -X
 use Data::Dumper;
 use JSON;
 use Digest::MD5 qw(md5_hex);

@@ -538,10 +538,8 @@ $self->{out} .=  sprintf "\n<br>\n<b>worndnet suport / compute strong similar te
 $self->{out} .=  sprintf("\n(%s%s)\n%3.3f",sprintf($self->trim(`micro-wnet $_`)),$_,$s2->{$_});
         }
 
+return $self->{out};
 
-
-      return $out;
- 
     }
 
 sub getDocList{

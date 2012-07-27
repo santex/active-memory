@@ -182,8 +182,8 @@ my  $test_set = { };
 my @theme = split("\n",`perl -MAI::MicroStructure -le 'print for AI::MicroStructure->themes;'`);
 foreach(@theme){
   my $name = lc $_;
-  my $sub = lc `meta $name 1`;
-  my $body = lc `meta $name 2`;
+  my $sub = lc `micro $name 1`;
+  my $body = lc `micro $name 2`;
   $body=~ s/\n/ /g;
     $sub=~ s/\n/ /g;
       $name=~ s/_/ /g;
@@ -280,7 +280,7 @@ my $b = $r->best_category;
            $b,
            $r->scores($b),
            $self->{booknames}->{$b},
-           sprintf `microdict $self->{booknames}->{$b} | data-freq --limit 5`);
+           sprintf `microdict $self->{booknames}->{$b} | data-freq --limit 50`);
 
   }
 

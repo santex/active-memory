@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl -X
 use strict;
 use AnyDBM_File;
 use Fcntl;
