@@ -605,7 +605,7 @@ if($new==1){
   my  @d = grep{/^$line#/}split("sense~~~~~~~~~",$d);
   @{$data->{rows}->{"search"}}=split("#",join("",@d));
 
-
+  
 #print Dumper @{$data->{rows}->{"search"}};
 
 
@@ -674,7 +674,7 @@ my $usage = << 'EOT';
   J   \  `YY           ""'   ::  MM @)>F
    L  /)  88                  :  |  ""\|
    | ( (   Yb .            '  .  |     L
-   \   bo  8b    .            .  J     |        
+   \   bo  8b    .            .  J     |        <0>_
     \      "' .      .    .    .  L   F         <1>_
      o._.:.    .        .  \mm,__J/  /          <2>_
      Y8::'|.            /     `Y8P  J           <3>_
