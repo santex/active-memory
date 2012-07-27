@@ -12,10 +12,11 @@ active-memory
 ```  
   
   ☞ [One liners]  
-echo #CREATES micro-structure planet;     (if all installed including dependencies calls spock) 
+
+  (if all installed including dependencies calls spock) 
 
 ``````
-echo #CREATES micro-structure planet calls spock; 
+echo #CREATES micro-structure planet;     
 sudo micro new planet;
 ```
 ```
