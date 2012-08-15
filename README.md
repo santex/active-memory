@@ -195,6 +195,13 @@ inferior_planet
   Not finished, any help is welcome
 
 
+### Special thanks 
+
+goes to book (Philippe Bruhat (BooK)) and his project 
+Acme-MetaSyntactic
+book@cpan.org
+URL:http://philippe.bruhat.net/
+
 
 ## Runing it
 
