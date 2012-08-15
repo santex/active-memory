@@ -190,12 +190,12 @@ inferior_planet
  * [Wiki] open
  * [Bit-torrent] open
 
-### # Status
+#### Status
 
   Not finished, any help is welcome
 
 
-### Special thanks 
+#### Special thanks 
 
 goes to book (Philippe Bruhat (BooK)) and his project 
 Acme-MetaSyntactic
