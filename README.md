@@ -1,6 +1,11 @@
 active-memory
 ===================
 
+  ☞ [sample](http://quantup.com/tiny/force.php)
+
+  ☞ [PDF info](https://github.com/santex/active-memory/raw/master/start-here.pdf)
+
+
 
 ## Get going 
 
