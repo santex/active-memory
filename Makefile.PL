@@ -9,6 +9,16 @@ WriteMakefile(
     ABSTRACT_FROM       => 'lib/AI/MicroStructure/',
     PL_FILES            => {},
     PREREQ_PM => {
+'POE::Component::SSLify'=>0,
+'Statistics::MVA::HotellingTwoSample'=>0,
+'Algorithm::BaumWelch'=>0,
+'Statistics::Distributions::Ancova'=>0,
+'Statistics::MVA::BayesianDiscrimination'=>0,
+'Statistics::Contingency'=>0,
+'AI::Categorizer'=>0,
+'Algorithm::NaiveBayes'=>0,
+'Lingua::StopWords'=>0,
+'Class::Container'=>0,
 'Test::More' => 0,
 'File::Glob' => 0,
 'List::Util' => 0,
@@ -26,6 +36,11 @@ WriteMakefile(
 'Search::ContextGraph' => 0,
 'Cwd' => 0,
 'CGI'=>0,
+'HTML::SimpleLinkExtor'=>0,
+'WWW::Wikipedia'=>0,
+'HTML::Strip'=>0,
+'POE::Component::Client::HTTP'=>0,
+'CouchDB::Client'=>0,
 'Data::Freq'=>0,
 'Test::Simple' => 0.44,
 'JSON::Any' => 1.17,
@@ -40,6 +55,7 @@ WriteMakefile(
 'scripts/micro-ontology',
 'scripts/micro-wnet',
 'scripts/micro',
+'scripts/micro-wiki',
 'scripts/micro-bashcommand',
 'scripts/micro-dict',
 'scripts/micro-rename',
@@ -52,7 +68,4 @@ WriteMakefile(
     dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean               => { FILES => 'AI-MicroStructure-*' },
 );
-
-
-
 
