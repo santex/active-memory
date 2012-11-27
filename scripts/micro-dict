@@ -72,5 +72,4 @@ uniquemmasher $*;
 else
 masher $*;
 fi
-
 exit 0

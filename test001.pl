@@ -1,8 +1,11 @@
 use strict;
+use Data::Dumper;
 use Test::More;
 use AI::MicroStructure ();
 $ENV{AMS_REMOTE} = 1;
-@ARGV=("galaxies");
+
+@ARGV=("nuclear");# unless($ARGV[0]);
+
 my @themes =
     grep { eval "require $_;"; $_->has_remotelist() }
     map {"AI::MicroStructure::$_"} AI::MicroStructure->themes();
@@ -14,7 +17,7 @@ my %test;
 if ( @ARGV && $ARGV[0] eq 'not' ) {
     shift;
     %test = map { $_ => 1 } @themes;
-    $test{"AI::MicroStructure::$_"} = 0 for @ARGV;
+    $test{"AI::MicroStructure::$ARGV[0]"} = 0 for @ARGV;
 }
 else {
     %test =
@@ -56,5 +59,7 @@ else {
                     is_deeply( $current, $online, "$theme is up to date" );
                 }
             }
-    
-
+   END{
+    print Dumper %test;
+   } 
+1;

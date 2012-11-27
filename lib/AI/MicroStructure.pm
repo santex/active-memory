@@ -136,13 +136,7 @@ sub new {
     # defer croaking until name() is actually called
     bless { theme => $theme, tools => { @tools }, micro => {}}, $class;
 
-
-
     #if(defined($driverarg) && join("" ,@_)  =~/couch|cache|berkeley/){
-
-
-
-
 }
 
 sub _rearrange{
@@ -336,13 +330,7 @@ for my $test (@micros) {
 }
 
 
-
  return $all;
-
-
-
-
-
 
 }
 
