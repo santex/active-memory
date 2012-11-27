@@ -9,7 +9,6 @@ WriteMakefile(
     ABSTRACT_FROM       => 'lib/AI/MicroStructure/',
     PL_FILES            => {},
     PREREQ_PM => {
-'POE::Component::SSLify'=>0,
 'Statistics::MVA::HotellingTwoSample'=>0,
 'Algorithm::BaumWelch'=>0,
 'Statistics::Distributions::Ancova'=>0,
@@ -26,7 +25,6 @@ WriteMakefile(
 'POE'=>0,
 'CouchDB::Client'=>0,
 'Getopt::Long'=>0,
-'Curses' => 0,
 'Search::ContextGraph' => 0,
 'Rose::DB::Object' => 0,
 'Term::ShellUI'=>0,
