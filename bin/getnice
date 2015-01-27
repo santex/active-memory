@@ -1,0 +1,12 @@
+#!/bin/bash
+
+IFS=$'\n'
+
+if [ ! $MICRO_LANG ]
+ then
+  MICRO_LANG=en
+fi
+q=$1
+dir=$2
+j=$(for i in `find -P  $dir | egrep "\.json$" | tr -d "0-9: " | egrep -i "$q"`; do  echo $i | xargs  json-printer \-f | egrep "^\".*.$" | egrep -v ":|http|wiki|index|\/|Externallinks|References|Seealso|Listof|#|[1-9][0-9][0-9][0-9]" | tr -d "\",";  done);  
+echo "$j"| egrep -i "^$q|_$q"
