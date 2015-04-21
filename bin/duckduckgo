@@ -1,0 +1,55 @@
+#!/usr/bin/env perl
+# PODNAME: duckduckgo
+# ABSTRACT: Command line tool to use the DuckDuckGo API
+
+binmode STDOUT, ":utf8";
+
+use App::DuckDuckGo;
+App::DuckDuckGo->new_with_options->print_query_with_extra_argv;
+
+
+
+=pod
+
+=head1 NAME
+
+duckduckgo - Command line tool to use the DuckDuckGo API
+
+=head1 VERSION
+
+version 0.008
+
+=head1 SYNPOSIS
+
+  duckduckgo facebook
+  
+  duckduckgo --batch facebook
+  
+  duckduckgo duck duck go
+
+=head2 DESCRIPTION
+
+This application queries the L<DuckDuckGo API|http://www.duckduckgo.com/api.html> and displays the result in a nice human-readable way or in a batch mode which could be used by a shellscript to automatically work with the DuckDuckGo API results.
+
+The B<--batch> parameter tells the application to display the data in a more machine readable form.
+
+The B<--forcesecure> parameter tells the application to not fall back to http if the https request failed.
+
+The startup of the application takes some milliseconds longer cause of the compile overhead by L<Moose>. If you want to use a huge bunch of queries, you should consider L<Learning Perl|http://learn.perl.org/>, best directly the modern way with the free L<Modern Perl Book|http://www.onyxneon.com/books/modern_perl/index.html> available as L<PDF|http://www.onyxneon.com/books/modern_perl/modern_perl_letter.pdf>. Then you can use the distribution L<WWW::DuckDuckGo> directly todo faster a bigger amount of queries
+
+=head1 AUTHOR
+
+Torsten Raudssus <torsten@raudssus.de>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2013 by L<DuckDuckGo Inc.|https://duckduckgo.com/>.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
+
+
+__END__
+

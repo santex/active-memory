@@ -1,0 +1,36 @@
+#!/usr/bin/perl -w
+binmode STDOUT, ":utf8";
+use Getopt::Long;
+use JSON;
+
+my $version = "json-printer.pl v2012-04-08";
+my $help = 0;
+my $filename="";
+my @jsonlist;
+
+GetOptions('help|h' => \$help,
+      'f=s' => \$filename);
+
+if ($help || $filename eq "")
+{
+  print("\nHelp for $version\n\n");
+  print("Perl script to pretty print JSON files.\n");
+  print("Example: json-printer.pl -f search-5.json\n");
+  exit;
+}
+
+open(my $tfile, "<", $filename) or exit(0);#return; #die "Can't Open $filename JSON File!";
+@jsonlist = <$tfile>; # extract each line to a list element
+chomp(@jsonlist); # get rid of newlines
+close($tfile);
+
+my $json_string = join(' ', @jsonlist); # join list elements into one big happy scalar string
+
+my $json = JSON->new->allow_nonref->convert_blessed->allow_tags; # create a new JSON object which converts non-references into their values for encoding
+my $perl_scalar = $json->convert_blessed->allow_tags->decode($json_string); # converts JSON string into Perl hash(es)
+
+# at this point (if you wanted to) you can add code to iterate thru the hash(es) to extract/use values.
+
+my $pretty_printed = $json->pretty->allow_blessed->convert_blessed->allow_tags->encode( $perl_scalar ); # re-encode the hash just so we can then pretty print it (hack-tacular!)
+ $pretty_printed =~s/ //g;
+print $pretty_printed;
